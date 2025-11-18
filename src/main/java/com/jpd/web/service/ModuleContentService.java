@@ -286,7 +286,7 @@ public class ModuleContentService {
 		    if (!idsToDelete.isEmpty()) {
 		        List<ModuleContent> toDeleteEntities = 
 		            moduleContentRepository.findAllById(idsToDelete);
-		        moduleContentRepository.deleteAllInBatch(toDeleteEntities);
+		        moduleContentRepository.deleteAll(toDeleteEntities);
 		    }
 		    
 		    List<ModuleContent> savedContents = (List<ModuleContent>) 
