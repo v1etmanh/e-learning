@@ -35,3 +35,6 @@ build/
 src/main/resources/firebase-service-account.json
 src/main/resources/application.properties
 .cursor/
+docker-compose/secret/firebase-sa.json
+secret/firebase-service-account.json
+docker-compose/.env

@@ -3,12 +3,11 @@ import com.jpd.web.dto.*;
 import com.jpd.web.model.JoinSessionRequest;
 import com.jpd.web.model.SessionInfo;
 import com.jpd.web.service.SessionService;
-import com.jpd.web.service.utils.RequestAttributeExtractor;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +25,11 @@ public class QuizSessionController {
      */
     @PostMapping("/create")
     public ResponseEntity<CreateSessionResponse> createSession(@RequestBody CreateSessionRequest request,
-    		HttpServletRequest request2) {
+                                                               @AuthenticationPrincipal Jwt jwt) {
         try {
-        	long creatorId= RequestAttributeExtractor.extractCreatorId(request2);
+            String customerId = jwt.getClaimAsString("sub");
     		
-            CreateSessionResponse response = sessionService.createSession(request,creatorId);
+            CreateSessionResponse response = sessionService.createSession(request,customerId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();

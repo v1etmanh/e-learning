@@ -29,7 +29,7 @@ public class Feedback {
 
     //link to Enrollment
     @OneToOne
-    @JoinColumn(name = "enrollment_id")
+    @JoinColumn(name = "enrollment_id", nullable = false)
     @JsonBackReference("enrollment-feedback")
     private Enrollment enrollment;
 

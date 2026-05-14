@@ -40,27 +40,12 @@ public class Module {
 @CreationTimestamp
   private LocalDateTime createDate;
     //link to ModuleContent
-    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-   //@JsonManagedReference("module_modulecontent")
-    @JsonIgnore
-    private List<ModuleContent> moduleContent;
+
+
     @Column(name = "order_in_chapter")
     private int orderInChapter;
     @Transient
-    @JsonProperty("contentTypes")
-    public Set<TypeOfContent> getContentTypes() {
-        if (moduleContent == null || moduleContent.isEmpty()) {
-            return Set.of();
-        }
-        return moduleContent.stream()
-                .map(ModuleContent::getTypeOfContent)
-                .filter(type -> type != null)
-                .collect(Collectors.toSet());
-    }
-    @OneToMany(mappedBy = "module",cascade = CascadeType.ALL)
-    @JsonManagedReference("module-cm")
-     
-     private List<CustomerModuleContent>customerModuleContents;
-     
-    
+    private Set<TypeOfContent> contentTypes;
+    @Transient
+    private CustomerModuleContent customerModuleContents;
 }

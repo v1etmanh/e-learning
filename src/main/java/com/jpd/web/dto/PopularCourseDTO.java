@@ -16,8 +16,8 @@ public class PopularCourseDTO {
     private long courseId;
     private String title;
     private long students;
-    private double revenue;
+
     private double rating;
     private String urlImg;
-    private double price;
+
 }

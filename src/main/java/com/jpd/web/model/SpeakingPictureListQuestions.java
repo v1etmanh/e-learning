@@ -1,6 +1,7 @@
 package com.jpd.web.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ public class SpeakingPictureListQuestions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "speaking_picture_id")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) 
     private long id;
     private String question;
 

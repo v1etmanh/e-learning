@@ -37,7 +37,7 @@ private PassageRepository passageRepository;
  @Autowired
     private EntityManager entityManager;
 @Transactional
-public List<ModuleContent> updateCourseMaterial(List<ModuleContent> m,long kahootId,long creatorId) {
+public List<ModuleContent> updateCourseMaterial(List<ModuleContent> m,long kahootId,String creatorId) {
 	 KahootListFunction k = validationResources.validateKahootOwnership(
                 kahootId,
                 creatorId
@@ -94,7 +94,7 @@ public List<ModuleContent> updateCourseMaterial(List<ModuleContent> m,long kahoo
 
 @Transactional
 public void deleteModuleContent(
-        Long contentId, Long kahootId, Long creatorId) {
+        Long contentId, Long kahootId, String creatorId) {
     
     log.info("Deleting content {} from kahoot {} by creator {}", 
             contentId, kahootId, creatorId);
@@ -121,17 +121,17 @@ public void deleteModuleContent(
 //delete by type @Transactional
   @Transactional
     public void deleteModuleContentsByType(
-            TypeOfContent type, Long moduleId, Long chapterId, Long courseId, Long creatorId) {
+            TypeOfContent type, Long moduleId, Long chapterId, Long courseId, String creatorId) {
         
         log.info("Deleting all {} contents from module {} by creator {}", 
                 type, moduleId, creatorId);
-        
+
         // Validate complete ownership
         Module module = validationResources.validateCompleteOwnership(
                 moduleId, chapterId, courseId, creatorId );
         
         // Delete by type
-         moduleContentRepository.deleteByTypeOfContentAndModule(type, module);
+         moduleContentRepository.deleteByTypeOfContentAndModuleId(type, moduleId);
         
         log.info("Successfully deleted {} {} contents from module {}", 
                 type.toString(), type, moduleId);

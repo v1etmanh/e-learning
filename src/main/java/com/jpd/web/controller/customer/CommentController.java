@@ -42,9 +42,9 @@ public class CommentController {
             @PathVariable("courseId") long courseId) {
         
         log.debug("Getting all comments for course {}", courseId);
-        String email = jwt.getClaimAsString("email");
+        String customerId = jwt.getClaimAsString("sub");
         
-        List<CommentDto> comments = commentService.retrieveAllCommentOfCourse(courseId, email);
+        List<CommentDto> comments = commentService.retrieveAllCommentOfCourse(courseId, customerId);
         return ResponseEntity.ok(comments);
     }
     
@@ -59,9 +59,9 @@ public class CommentController {
             @Valid @RequestBody CommentRequestDto request) {
         
         log.debug("Creating comment for course {}", courseId);
-        String email = jwt.getClaimAsString("email");
+        String customerId = jwt.getClaimAsString("sub");
         
-        CommentDto comment = commentService.createComment(email, request.getContent(), courseId);
+        CommentDto comment = commentService.createComment(customerId, request.getContent(), courseId);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }
     
@@ -77,9 +77,9 @@ public class CommentController {
             @Valid @RequestBody CommentRequestDto request) {
         
         log.debug("Updating comment {} for course {}", commentId, courseId);
-        String email = jwt.getClaimAsString("email");
+        String customerId = jwt.getClaimAsString("sub");
         
-        CommentDto comment = commentService.updateComment(commentId, email, request.getContent());
+        CommentDto comment = commentService.updateComment(commentId, customerId, request.getContent());
         return ResponseEntity.ok(comment);
     }
     
@@ -94,9 +94,9 @@ public class CommentController {
             @PathVariable("commentId") long commentId) {
         
         log.debug("Deleting comment {} from course {}", commentId, courseId);
-        String email = jwt.getClaimAsString("email");
+        String customerId = jwt.getClaimAsString("sub");
         
-        commentService.deleteCommentById(commentId, email);
+        commentService.deleteCommentById(commentId, customerId);
         return ResponseEntity.noContent().build();
     }
 }

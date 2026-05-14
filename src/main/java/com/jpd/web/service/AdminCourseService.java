@@ -88,14 +88,14 @@ public class AdminCourseService {
                 .name(course.getName())
                 .creatorName(course.getCreator() != null ? course.getCreator().getFullName() : "Unknown")
                 .isBan(course.isBan())
-                
-                .price(course.getPrice())
+
+
                 .language(course.getLanguage())
-                
+
                 .numberReports(course.getReports().size())
                 .numberStudent(r.numStudent)
                 .avtRating(r.avgRating)
-                
+
                 .build();
     }
     private record RatingInfo(double avgRating, int numStudent) {
@@ -120,6 +120,6 @@ public class AdminCourseService {
 		double avgRating = total > 0 ? sumRating / total : 0;
 		return new RatingInfo(avgRating, enrollments.size());
 	}
-	
+
 
 }

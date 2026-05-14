@@ -54,8 +54,7 @@ public class Course {
     private String learningObject;
 
     private String name;
-    @Column(name ="price")
-    private long price;
+
     private String requirements;
 
     @Column(name = "target_audience")
@@ -97,4 +96,6 @@ public class Course {
     // link to Wishlist
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
     private List<Wishlist> wishlists;
+    @OneToOne(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
+    private CourseMetrics courseMetrics;
 }

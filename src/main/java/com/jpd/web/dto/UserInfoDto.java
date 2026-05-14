@@ -2,9 +2,9 @@ package com.jpd.web.dto;
 
 import java.sql.Date;
 
+import lombok.Builder;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.google.auto.value.AutoValue.Builder;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @Builder
 @RequiredArgsConstructor
+
 public class UserInfoDto {
 private String userName;
 private String familyName;

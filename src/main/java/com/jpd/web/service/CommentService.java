@@ -13,9 +13,7 @@ import com.jpd.web.exception.FeedBackIligalException;
 import com.jpd.web.exception.UnauthorizedException;
 import com.jpd.web.model.Comment;
 import com.jpd.web.model.Course;
-import com.jpd.web.model.Creator;
-import com.jpd.web.model.Customer;
-import com.jpd.web.repository.CommentaRepository;
+import com.jpd.web.repository.CommentRepository;
 import com.jpd.web.service.utils.CommentFilterService;
 import com.jpd.web.service.utils.ValidationResources;
 
@@ -26,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CommentService {
     
     @Autowired
-    private CommentaRepository commentaRepository;
+    private CommentRepository commentaRepository;
     @Autowired
     private CommentFilterService commentFilterService;
     @Autowired
@@ -36,18 +34,18 @@ public class CommentService {
      * Create comment - only valid if customer enrolled in course or is the creator
      */
     @Transactional
-    public CommentDto createComment(String email, String content, long courseId) {
-        log.debug("Creating comment for course {} by user {}", courseId, email);
+    public CommentDto createComment(String customerId, String content, long courseId) {
+        log.debug("Creating comment for course {} by user {}", courseId, customerId);
         
         // Validate customer has access to course (enrolled or is creator)
-        Course course = validationResources.validateCustomerWithCourse(email, courseId);
-        Customer customer = validationResources.validateCustomerExist(email);
+        Course course = validationResources.validateCustomerWithCourse(customerId, courseId);
+
         if(commentFilterService.isToxic(content))throw new FeedBackIligalException(content);
         // Create comment
         Comment comment = Comment.builder()
                 .content(content)
                 .course(course)
-                .customer(customer)
+                .customerId(customerId)
                 .build();
         
         Comment savedComment = commentaRepository.save(comment);
@@ -56,7 +54,7 @@ public class CommentService {
         
         return CommentDto.builder()
                 .comment(savedComment.getContent())
-                .createBy(customer.getEmail())
+                .createBy(customerId)
                 .build();
     }
     
@@ -64,19 +62,18 @@ public class CommentService {
      * Delete comment - only if comment belongs to customer or customer is the course creator
      */
     @Transactional
-    public void deleteCommentById(long commentId, String email) {
-        log.debug("Deleting comment {} by user {}", commentId, email);
+    public void deleteCommentById(long commentId, String customerId) {
+        log.debug("Deleting comment {} by user {}", commentId, customerId);
         
         Comment comment = commentaRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
         
-        Customer customer = validationResources.validateCustomerExist(email);
+
         Course course = comment.getCourse();
-        Creator creator = customer.getCreator();
+
         
         // Check if user is the course creator
-        boolean isCreator = creator != null && 
-                           course.getCreator().getCreatorId() == creator.getCreatorId();
+        boolean isCreator = course.getCreator().getCreatorId().equals(customerId);
         
         // If not creator, user can only delete their own comments
         // Note: You'll need to add a Customer reference to Comment entity for this to work properly
@@ -92,14 +89,13 @@ public class CommentService {
      * Update comment - only if comment belongs to the customer
      */
     @Transactional
-    public CommentDto updateComment(long commentId, String email, String newContent) {
-        log.debug("Updating comment {} by user {}", commentId, email);
+    public CommentDto updateComment(long commentId, String  customerId, String newContent) {
+        log.debug("Updating comment {} by user {}", commentId, customerId);
         
         Comment comment = commentaRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
         
-        Customer customer = validationResources.validateCustomerExist(email);
-        
+
         // Note: You need to add a Customer reference to Comment entity
         // For now, we'll just update the comment
         // In production, verify comment ownership here
@@ -111,7 +107,7 @@ public class CommentService {
         
         return CommentDto.builder()
                 .comment(updatedComment.getContent())
-                .createBy(customer.getEmail())
+                .createBy(customerId)
                 .build();
     }
     

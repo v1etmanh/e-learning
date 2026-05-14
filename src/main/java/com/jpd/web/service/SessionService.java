@@ -1,5 +1,7 @@
 package com.jpd.web.service;
+import com.jpd.web.exception.CreatorNotFoundException;
 import com.jpd.web.model.*;
+import com.jpd.web.repository.CreatorRepository;
 import com.jpd.web.repository.KahootRepository;
 import com.jpd.web.repository.ModuleContentRepository;
 import com.jpd.web.service.utils.ValidationResources;
@@ -25,7 +27,7 @@ public class SessionService {
     @Autowired
     private KahootRepository kahootRepository;
     @Autowired
-    private ValidationResources validationResources;
+    private CreatorRepository creatorRepository;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     
@@ -36,12 +38,12 @@ public class SessionService {
     /**
      * Tạo session mới
      */
-    public CreateSessionResponse createSession(CreateSessionRequest request, long creatorId) {
+    public CreateSessionResponse createSession(CreateSessionRequest request, String creatorId) {
         // 1. Lấy Kahoot từ database,long 
         KahootListFunction kahoot = kahootRepository.findById(request.getKahootId())
             .orElseThrow(() -> new RuntimeException("Kahoot not found with id: " + request.getKahootId()));
-        Creator c=this.validationResources.validateCreatorExists(creatorId);
-        if(kahoot.getCreator().getCreatorId()!=creatorId)
+        Creator c=this.creatorRepository.findById(creatorId).get();
+        if(!kahoot.getCreator().getCreatorId().equals(creatorId))
         	throw new UnauthorizedException("tài nguyên không thuộc về mày");
         // 2. Lọc chỉ lấy câu hỏi Multiple Choice và GapFill
         List<Long> questionIds = kahoot.getModuleContent().stream()
@@ -99,7 +101,7 @@ public class SessionService {
         // 6. Generate QR code URL (dùng API public)
         String joinUrl = "http://localhost:3000/creator/class/kahoot/studentJoin/" + sessionCode; // Thay bằng domain thật
         String qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + joinUrl;
-        
+
         // 7. Return response
         return CreateSessionResponse.builder()
             .sessionCode(sessionCode)

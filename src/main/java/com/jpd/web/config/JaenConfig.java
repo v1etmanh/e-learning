@@ -30,7 +30,6 @@ import com.jpd.web.filter.CookieAuthenticationFilter;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class JaenConfig {

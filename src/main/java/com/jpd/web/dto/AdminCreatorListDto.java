@@ -13,9 +13,9 @@ import java.sql.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminCreatorListDto {
-    private Long creatorId;
+    private String creatorId;
     private String fullName;
-    private String email;
+
     private String imageUrl;
     private Status status;
     private Double balance;

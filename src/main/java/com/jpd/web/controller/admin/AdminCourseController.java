@@ -40,7 +40,7 @@ public class AdminCourseController {
         return ResponseEntity.ok(ApiResponse.success(course));
     }
 
-    // Khóa khóa học    
+    // Khóa khóa học
     @PostMapping("/{courseId}/ban")
     public ResponseEntity<ApiResponse<String>> banCourse(@PathVariable Long courseId) {
         adminCourseService.banCourse(courseId);
@@ -55,5 +55,5 @@ public class AdminCourseController {
     }
 
     // Thay đổi trạng thái public/private
-    
+
 }

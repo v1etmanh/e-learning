@@ -85,10 +85,7 @@ public class OpenAIService {
         return transcribedText;
     }
     // Overload method để backward compatibility
-    public String speechToText(MultipartFile audioFile,Language language) throws Exception {
-    	
-        return speechToText(audioFile, language.toString());
-    }
+
     
     public SemanticResult compareSemanticWithEmbedding(String transcribedText, String expectedAnswer) throws Exception {
         // 1. Lấy embedding cho cả 2 câu

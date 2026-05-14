@@ -25,7 +25,7 @@ public class AuditLog {
     private String actionType; // APPROVE_CERT, REJECT_CERT, BAN_CREATOR, WARN_CREATOR, UNBAN_CREATOR
 
     @Column(name = "target_creator_id", nullable = false)
-    private Long targetCreatorId;
+    private String targetCreatorId;
 
     @Column(name = "admin_email", nullable = false)
     private String adminEmail;

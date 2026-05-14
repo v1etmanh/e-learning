@@ -38,7 +38,7 @@ public class AdminCreatorController {
 
     // Get creator detail
     @GetMapping("/{creatorId}")
-    public ResponseEntity<AdminCreatorDetailDto> getCreatorDetail(@PathVariable Long creatorId) {
+    public ResponseEntity<AdminCreatorDetailDto> getCreatorDetail(@PathVariable String creatorId) {
         AdminCreatorDetailDto dto = adminCreatorService.getCreatorDetail(creatorId);
         return ResponseEntity.ok(dto);
     }
@@ -53,7 +53,7 @@ public class AdminCreatorController {
     // Approve certificate
     @PostMapping("/{creatorId}/approve-certificate")
     public ResponseEntity<Map<String, String>> approveCertificate(
-            @PathVariable Long creatorId,
+            @PathVariable String creatorId,
             @RequestParam("adminNote")String adminNote,
             @AuthenticationPrincipal Jwt jwt) {
         String adminEmail = jwt.getClaimAsString("email");
@@ -69,7 +69,7 @@ public class AdminCreatorController {
     // Reject certificate
     @PostMapping("/{creatorId}/reject-certificate")
     public ResponseEntity<Map<String, String>> rejectCertificate(
-            @PathVariable Long creatorId,
+            @PathVariable String creatorId,
             @RequestBody Map<String, String> request,
             @AuthenticationPrincipal Jwt jwt) {
         String adminEmail = jwt.getClaimAsString("email");
@@ -85,7 +85,7 @@ public class AdminCreatorController {
     // Warn creator
     @PostMapping("/{creatorId}/warn")
     public ResponseEntity<Map<String, String>> warnCreator(
-            @PathVariable Long creatorId,
+            @PathVariable String creatorId,
             @RequestParam("reason") String reason,
             @AuthenticationPrincipal Jwt jwt) {
         String adminEmail = jwt.getClaimAsString("email");
@@ -101,7 +101,7 @@ public class AdminCreatorController {
     // Ban creator
     @PostMapping("/{creatorId}/ban")
     public ResponseEntity<Map<String, String>> banCreator(
-            @PathVariable Long creatorId,
+            @PathVariable String creatorId,
             @RequestBody Map<String, String> request,
             @AuthenticationPrincipal Jwt jwt) {
         String adminEmail = jwt.getClaimAsString("email");
@@ -119,7 +119,7 @@ public class AdminCreatorController {
     // Unban creator
     @PostMapping("/{creatorId}/unban")
     public ResponseEntity<Map<String, String>> unbanCreator(
-            @PathVariable Long creatorId,
+            @PathVariable String creatorId,
             @RequestBody(required = false) Map<String, String> request,
             @AuthenticationPrincipal Jwt jwt) {
         String adminEmail = jwt.getClaimAsString("email");
@@ -134,14 +134,14 @@ public class AdminCreatorController {
 
     // Get violation history
     @GetMapping("/{creatorId}/violations")
-    public ResponseEntity<List<Report>> getCreatorViolations(@PathVariable Long creatorId) {
+    public ResponseEntity<List<Report>> getCreatorViolations(@PathVariable String creatorId) {
         List<Report> violations = adminCreatorService.getCreatorViolationHistory(creatorId);
         return ResponseEntity.ok(violations);
     }
 
     // Get audit logs
     @GetMapping("/{creatorId}/audit-logs")
-    public ResponseEntity<List<AuditLog>> getCreatorAuditLogs(@PathVariable Long creatorId) {
+    public ResponseEntity<List<AuditLog>> getCreatorAuditLogs(@PathVariable String creatorId) {
         List<AuditLog> logs = adminCreatorService.getCreatorAuditLog(creatorId);
         return ResponseEntity.ok(logs);
     }

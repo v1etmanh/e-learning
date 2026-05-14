@@ -12,5 +12,7 @@ import com.jpd.web.model.Status;
 @Repository
 public interface PendingImgRepository extends CrudRepository<PendingImage, Long>{
 List<PendingImage> findByStatus(Status status);
-Optional<PendingImage> deleteByCreatorIdAndUrl(long creatorId,String url);
+Optional<PendingImage> deleteByCreatorIdAndUrl(String creatorId,String url);
+
+    Optional<PendingImage> findByCreatorIdAndUrl(String creatorId, String url);
 }

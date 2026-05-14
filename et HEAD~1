@@ -1,0 +1,45 @@
+[33m3bf3133[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmanhle5[m[33m)[m re init du an
+[33mf07ea37[m d
+[33m1cc6936[m fix thanh toan
+[33mef49b50[m fix thanh toan
+[33m3f27cc4[m[33m ([m[1;32mfinal[m[33m)[m fix thanh toan
+[33m29ff450[m fix thanh toan
+[33m2e3f050[m fix thanh toan
+[33m01d0673[m Merge remote-tracking branch 'refs/remotes/origin/final' into manhle5
+[33md795ecd[m d
+[33m4b4cf0b[m d
+[33mf3e5162[m a
+[33m4e350de[m d
+[33mef8dbc4[m d
+[33me37c9e3[m fix thanh toan
+[33me10a0a2[m[33m ([m[1;32mmanhle4[m[33m)[m d
+[33m5de9bb8[m d
+[33m61ed058[m d
+[33m8b78cad[m d
+[33m1144631[m d
+[33m9ccd69d[m d
+[33md82feff[m paypal system
+[33m00542e8[m system test ver1
+[33mbb1fdb7[m fix hai test case
+[33me115f95[m fix upload test
+[33mb09a1e4[m d
+[33m004b67c[m d
+[33mb7f71ed[m d
+[33mc3a9a52[m[33m ([m[1;32m'raw-final'[m[33m)[m d
+[33m5618005[m d
+[33mfd3f9c5[m 'ad'
+[33m7818791[m[33m ([m[1;32mvt-admin-v1[m[33m)[m jabsbkfd
+[33m2e09bee[m Apply stash: keep vt-admin-v1 versions for conflicting files
+[33m77d632d[m Merge origin/'manhle3' into vt-admin-v1: resolve conflicts and add new modules
+[33m62c108f[m[33m ([m[1;32m'manhle3'[m[33m)[m 'a'
+[33mda750f6[m WIP: save local changes before rebase
+[33mf23bd24[m 'ta'
+[33m1f59125[m 'a'
+[33m54a4947[m add
+[33mf2ae340[m a
+[33mca462e0[m a
+[33mdc7fd48[m d
+[33m43b02d4[m Update .gitignore
+[33mbc976d3[m add1
+[33mf58fbf6[m update n
+[33mb425b8d[m add first time

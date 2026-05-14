@@ -15,5 +15,5 @@ public class FeedbackSimpleDto {
     private String content;
     private int rate;
     private LocalDate createDate;
-    private CustomerSimpleDto customer;
+    private String  customerId;
 }

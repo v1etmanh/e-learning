@@ -16,9 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 public class AdminCreatorDetailDto {
     // Basic info
-    private Long creatorId;
+    private String creatorId;
     private String fullName;
-    private String email;
+
     private String phone;
     private String titleSelf;
     private String imageUrl;

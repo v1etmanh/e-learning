@@ -2,9 +2,7 @@ package com.jpd.web.controller.creator;
 
 import java.util.List;
 
-import com.google.api.Http;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,13 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jpd.web.dto.ModuleContentDto;
-import com.jpd.web.dto.ModuleContentUpdateResult;
 import com.jpd.web.model.ModuleContent;
 import com.jpd.web.model.TypeOfContent;
 import com.jpd.web.service.ModuleContentService;
-import com.jpd.web.service.utils.RequestAttributeExtractor;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
@@ -39,10 +34,10 @@ public class ModuleContentController {
                                                                                  @Positive @PathVariable("moduleId") Long moduleId,
                                                                                  @Positive @PathVariable("chapterId") Long chapterId,
                                                                                  @Positive @PathVariable("courseId") Long courseId,
-                                                                                 HttpServletRequest request) {
+                                                                                 @AuthenticationPrincipal Jwt jwt) {
         //return
-        long creatorId=RequestAttributeExtractor.extractCreatorId(request);
-        List<ModuleContent>mds=moduleContentService.getModuleContentsByTypeAndModuleId(typeOfContent,moduleId,chapterId,courseId,creatorId);
+        String creatorId=jwt.getClaimAsString("sub");
+        List<ModuleContent>mds=moduleContentService.getModuleContentsByType(typeOfContent,moduleId,creatorId);
 
         return ResponseEntity.ok().body(mds);
     }
@@ -51,14 +46,14 @@ public class ModuleContentController {
                                                      @Positive @PathVariable("moduleId") Long moduleId,
                                                      @Positive @PathVariable("chapterId") Long chapterId,
                                                      @Positive @PathVariable("courseId") Long courseId,
-                                                     HttpServletRequest request               ) {
+                                                     @AuthenticationPrincipal Jwt jwt               ) {
 
-        Long creatorId = RequestAttributeExtractor.extractCreatorId(request);
+        String creatorId=jwt.getClaimAsString("sub");
         moduleContentService.deleteModuleContent(
-                moduleContentId, moduleId, chapterId, courseId, creatorId
+                moduleContentId, moduleId, creatorId
         );
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
 
     }
     @DeleteMapping("/deleteModuleContentByType")
@@ -66,20 +61,20 @@ public class ModuleContentController {
                                                        @Positive    @PathVariable ("moduleId")long moduleId,
                                                        @Positive     @PathVariable ("chapterId")long chapterId,
                                                        @Positive    @PathVariable ("courseId")long courseId,
-                                                       HttpServletRequest request
+                                                       @AuthenticationPrincipal Jwt jwt
     ) {
-        Long creatorId = RequestAttributeExtractor.extractCreatorId(request);
-        moduleContentService.deleteModuleContentsByType( type, moduleId, chapterId, courseId, creatorId);
+        String creatorId=jwt.getClaimAsString("sub");
+        moduleContentService.deleteModuleContentsByType( type, moduleId, creatorId);
         return ResponseEntity.noContent().build();
 
     }
     @PostMapping
     public ResponseEntity<?> updateModuleContents(
             @Valid @RequestBody ModuleContentDto moduleContentDto,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        Long creatorId = RequestAttributeExtractor.extractCreatorId(request);
-        ModuleContentUpdateResult contents = moduleContentService.updateCourseMaterial1(moduleContentDto, creatorId);
-        return ResponseEntity.ok(contents);
+        String creatorId=jwt.getClaimAsString("sub");
+         var result = moduleContentService.updateCourseMaterial(moduleContentDto, creatorId);
+        return ResponseEntity.ok(result);
     }
 }

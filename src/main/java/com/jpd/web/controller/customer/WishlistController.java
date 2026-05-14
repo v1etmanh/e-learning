@@ -24,7 +24,7 @@ private WishlistService wishlistService;
 public ResponseEntity<?> addToYourWishlist(@AuthenticationPrincipal Jwt jwt,
 		@PathVariable("courseId")long courseId)
 {
-  this.wishlistService.addWishlist(jwt.getClaimAsString("email"), courseId);	
+  this.wishlistService.addWishlist(jwt.getClaimAsString("sub"), courseId);
   return ResponseEntity.status(HttpStatus.CREATED).build();
 }
 }

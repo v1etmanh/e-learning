@@ -2,13 +2,12 @@ package com.jpd.web.transform;
 
 import com.jpd.web.dto.ReportForm;
 import com.jpd.web.model.Course;
-import com.jpd.web.model.Customer;
 import com.jpd.web.model.Report;
 
 public class ReportTransform {
-public static Report transToReport(ReportForm reportForm,Course c,Customer cus)
+public static Report transToReport(ReportForm reportForm,Course c,String cus)
 {return Report.builder()
-		.customer(cus)
+		.customerId(cus)
 		.course(c)
 		.detail(reportForm.getDetail())
 		.type(reportForm.getType())

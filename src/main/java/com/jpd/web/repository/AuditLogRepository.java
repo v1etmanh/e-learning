@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-    List<AuditLog> findByTargetCreatorIdOrderByTimestampDesc(Long creatorId);
+    List<AuditLog> findByTargetCreatorIdOrderByTimestampDesc(String creatorId);
 
     List<AuditLog> findByAdminEmailOrderByTimestampDesc(String adminEmail);
 
@@ -18,7 +18,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             "AND al.timestamp BETWEEN :startDate AND :endDate " +
             "ORDER BY al.timestamp DESC")
     List<AuditLog> findByCreatorAndDateRange(
-            @Param("creatorId") Long creatorId,
+            @Param("creatorId") String creatorId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 }

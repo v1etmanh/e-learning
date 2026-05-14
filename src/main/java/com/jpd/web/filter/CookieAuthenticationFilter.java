@@ -46,6 +46,7 @@ public class CookieAuthenticationFilter extends OncePerRequestFilter {
                 Collection<GrantedAuthority> authorities = converter.convert(jwt);
 
                 JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt, authorities);
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 

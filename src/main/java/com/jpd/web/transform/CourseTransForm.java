@@ -15,13 +15,10 @@ public class CourseTransForm {
 	public static Course transformFromCourseFormDto(CourseFormDto courseFormDto) {
 		Course c = Course.builder().name(courseFormDto.getName()).description(courseFormDto.getDescription())
 				.accessMode(courseFormDto.getAccessMode()).learningObject(courseFormDto.getLearningObject())
-				.targetAudience(courseFormDto.getTargetAudience()).price(0)
+				.targetAudience(courseFormDto.getTargetAudience())
 				.requirements(courseFormDto.getRequirements()).language(courseFormDto.getLanguage()).isBan(false)
 				.isPublic(false).teachingLanguage(courseFormDto.getTeachingLanguage()).build();
-		if (c.getAccessMode() == AccessMode.PAID) {
-			c.setPrice(courseFormDto.getPrice());
 
-		}
 		return c;
 	}
 
@@ -67,10 +64,7 @@ public class CourseTransForm {
 				if (modules != null) {
 					modules.forEach(module -> {
 						// Force load module contents - ĐÂY LÀ QUAN TRỌNG!
-						List<ModuleContent> contents = module.getModuleContent();
-						if (contents != null) {
-							contents.size(); // Trigger lazy loading
-						}
+
 					});
 				}
 			});
@@ -82,8 +76,7 @@ public class CourseTransForm {
 
 	public static CourseInfDto transformToCourseInfDto(Course course, int numberS, double avtR) {
 		return CourseInfDto.builder().id(course.getCourseId()).img(course.getUrlImg())
-				.instructor(course.getCreator().getFullName()).name(course.getName()).numberStudent(numberS)
-				.price(course.getPrice()).rating(avtR).language(course.getLanguage()).build();
+				.instructor(course.getCreator().getFullName()).name(course.getName()).numberStudent(numberS).language(course.getLanguage()).build();
 	}
 
 	public static CourseLearningCardDto transformToCourseLearningCardDto(Course course, long numerberFinishContent) {
@@ -93,13 +86,13 @@ public class CourseTransForm {
 			List<Chapter> chapters = course.getChapters();
 			for (int j = 0; j < chapters.get(i).getModules().size(); j++) {
 				Module md = chapters.get(i).getModules().get(j);
-				total += md.getContentTypes().size();
+
+				total += md.getContentTypes()==null?0:md.getContentTypes().size();
 			}
 		}
 
 		double progress = (double) numerberFinishContent / total * 100;
-		System.out.print("numb" + numerberFinishContent + "d" + total);
-		return CourseLearningCardDto.builder().course_img(course.getUrlImg()).course_name(course.getName())
+			return CourseLearningCardDto.builder().course_img(course.getUrlImg()).course_name(course.getName())
 				.courseId(course.getCourseId()).progress(progress).build();
 	}
 }

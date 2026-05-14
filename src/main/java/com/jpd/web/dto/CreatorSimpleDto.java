@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatorSimpleDto {
-    private Long creatorId;
+    private String creatorId;
     private String fullName;
     private String titleSelf;
     private String imageUrl;

@@ -43,7 +43,7 @@ public class AuthController {
  @GetMapping("/login-url")
  public ResponseEntity<?> getLoginUrl(@RequestParam String redirectUri) {
      try {
-    	 System.out.print("da");
+
          String codeVerifier = generateCodeVerifier();
          String codeChallenge = generateCodeChallenge(codeVerifier);
          String state = generateState();
@@ -64,7 +64,7 @@ public class AuthController {
                  "state", state
          ));
      } catch (Exception e) {
-    	 System.out.print(e);
+
          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                  .body(Map.of("error", "Failed to generate login URL"));
          
@@ -238,4 +238,5 @@ public class AuthController {
      refreshCookie.setMaxAge(0);
      response.addCookie(refreshCookie);
  }
+
 }

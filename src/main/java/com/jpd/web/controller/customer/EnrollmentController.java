@@ -24,8 +24,8 @@ private EnrollmentService enrollmentService;
 	public ResponseEntity<?> enroll(@RequestParam("joinKey") String key,
 			@PathVariable("id")long courseId, @AuthenticationPrincipal Jwt jwt) {
 	    //TODO: process POST request
-	    String email=jwt.getClaimAsString("email");
-	    boolean a=this.enrollmentService.handlePrivateCourse(courseId, key, email);
+		String customerId = jwt.getClaimAsString("sub");
+	    boolean a=this.enrollmentService.handleEnrollCouse(courseId, key, customerId);
 	    if(a) return ResponseEntity.status(HttpStatus.OK).build();
 	    else return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 	}

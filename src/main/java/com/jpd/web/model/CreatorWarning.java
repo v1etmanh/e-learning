@@ -40,4 +40,6 @@ public class CreatorWarning {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
+    @CreationTimestamp
+    private LocalDateTime createDate;
 }

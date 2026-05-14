@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CustomerSimpleDto {
-	 private Long customerId;
+	 private String customerId;
 	    private String fullName;
 	    private String imageUrl;
 }

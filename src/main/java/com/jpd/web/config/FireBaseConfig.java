@@ -21,7 +21,7 @@ public class FireBaseConfig {
 	  
 	    @PostConstruct
 	    public void init() throws IOException {
-	    	System.out.print(firebaseConfigPath);
+
 	        // Sử dụng ClassPathResource thay vì FileInputStream
 	        ClassPathResource resource = new ClassPathResource(firebaseConfigPath);
 	        

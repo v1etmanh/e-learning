@@ -26,7 +26,7 @@ public class SessionInfo implements Serializable {
     private Integer totalQuestions;     // Tổng số câu hỏi
     
     // === Teacher Information ===
-    private Long teacherId;             // ID giáo viên
+    private String teacherId;             // ID giáo viên
     private String teacherName;         // Tên giáo viên
     
     // === Session Status ===

@@ -38,8 +38,5 @@ private long commentId;
 	@JoinColumn(name = "courseId")
 	@JsonBackReference("course-comment")
 	private Course course;
-	@ManyToOne
-	@JoinColumn(name = "customer_id", nullable = false)
-	@JsonBackReference("customer-comment")
-	private Customer customer;
+	private String customerId;
 }

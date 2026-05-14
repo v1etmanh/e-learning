@@ -28,8 +28,8 @@ public class FeedbackController {
             @RequestParam("rate") int rate,
             @RequestParam("detail") String detail,
             @AuthenticationPrincipal Jwt jwt) {
-        String email = jwt.getClaimAsString("email");
-        this.feedbackService.addFeedback(email, courseId, detail, rate);
+        String customerId = jwt.getClaimAsString("sub");
+        this.feedbackService.addFeedback(customerId, courseId, detail, rate);
         return ResponseEntity.noContent().build();
     }
 }

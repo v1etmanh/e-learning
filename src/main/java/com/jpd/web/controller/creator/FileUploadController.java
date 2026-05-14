@@ -16,9 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.jpd.web.model.TypeOfFile;
 import com.jpd.web.service.FileUploadService;
-import com.jpd.web.service.utils.RequestAttributeExtractor;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/creator/uploadFile")
@@ -27,9 +24,9 @@ public class FileUploadController {
 	private FileUploadService fileUploadService;
 	@PostMapping("/savePdf")
 	 public ResponseEntity<?> storePDf(  @RequestParam("pdf") MultipartFile pdf,
-			 HttpServletRequest request) throws IllegalAccessException, IOException {
+			 @AuthenticationPrincipal Jwt jwt) throws IllegalAccessException, IOException {
 	
-	 	long creatorId=RequestAttributeExtractor.extractCreatorId(request);
+	 	String creatorId=jwt.getClaimAsString("sub");
 	    String a=this.fileUploadService.saveImgIntoFirebase(creatorId,pdf,TypeOfFile.PDF);
 	    if(a==null) {return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();}
 	    else return ResponseEntity.status(HttpStatus.OK).body(a);
@@ -37,17 +34,18 @@ public class FileUploadController {
 	}
 	@PostMapping("/saveImg")
 	public ResponseEntity<?> postMethodName(  @RequestParam("img") MultipartFile img,
-			HttpServletRequest request) throws IllegalAccessException, IOException {
-	   long creatorId=RequestAttributeExtractor.extractCreatorId(request);
+											  @AuthenticationPrincipal Jwt jwt) throws IllegalAccessException, IOException {
+
+		String creatorId=jwt.getClaimAsString("sub");
 	   String a=this.fileUploadService.saveImgIntoFirebase(creatorId,img,TypeOfFile.IMG);
 	   if(a==null) {return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();}
 	   else return ResponseEntity.status(HttpStatus.OK).body(a);
 	
 	}
 	@DeleteMapping("/delete_file")
-	public ResponseEntity<?> deleteImage(@RequestParam("url")String url,HttpServletRequest request)
+	public ResponseEntity<?> deleteImage(@RequestParam("url")String url, @AuthenticationPrincipal Jwt jwt)
 	{
-		 long creatorId=RequestAttributeExtractor.extractCreatorId(request);
+		String creatorId=jwt.getClaimAsString("sub");
 		 this.fileUploadService.deleteFileByUrl(url, creatorId);
 		 return ResponseEntity.noContent().build();
 	}

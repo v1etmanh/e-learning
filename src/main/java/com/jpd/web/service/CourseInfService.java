@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.annotations.Cache;
+import com.jpd.web.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -18,21 +18,12 @@ import com.jpd.web.dto.CreatorSimpleDto;
 import com.jpd.web.dto.CustomerSimpleDto;
 import com.jpd.web.dto.FeedbackSimpleDto;
 import com.jpd.web.exception.UnauthorizedException;
-import com.jpd.web.model.Chapter;
-import com.jpd.web.model.Course;
-import com.jpd.web.model.Creator;
-import com.jpd.web.model.Customer;
-import com.jpd.web.model.Enrollment;
-import com.jpd.web.model.Feedback;
-import com.jpd.web.model.Language;
 import com.jpd.web.repository.CourseRepository;
 import com.jpd.web.repository.CreatorRepository;
 import com.jpd.web.repository.CustomerModuleContentRepository;
-import com.jpd.web.repository.CustomerRepository;
 import com.jpd.web.repository.EnrollmentRepository;
 import com.jpd.web.service.utils.ValidationResources;
 import com.jpd.web.transform.CourseTransForm;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +40,7 @@ public class CourseInfService {
 	private EnrollmentRepository enrollmentRepository;
 	@Autowired
 	private CreatorRepository creatorRepository;
-	@Autowired
-	private CustomerRepository customerRepository;
+
 	@Autowired
 	private CustomerModuleContentRepository contentRepository;
 
@@ -64,53 +54,26 @@ public class CourseInfService {
 
 			// Sắp xếp theo điểm đánh giá tổng hợp
 			courses.sort((a, b) -> {
-				RatingInfo infoA = calculateAvtRatingAndNumberStudent(a);
-				RatingInfo infoB = calculateAvtRatingAndNumberStudent(b);
-				double scoreA = countWeightOfCourse(infoA.avgRating(), infoA.numStudent());
-				double scoreB = countWeightOfCourse(infoB.avgRating(), infoB.numStudent());
-				return Double.compare(scoreB, scoreA);
+                double aScore= a.getCourseMetrics().getAverageRating()*0.7+a.getCourseMetrics().getTotalStudents()*0.3;
+				double bScore= b.getCourseMetrics().getAverageRating()*0.7+b.getCourseMetrics().getTotalStudents()*0.3;
+				return Double.compare(aScore,bScore);
 			});
 
 			// Lấy top 3 khóa học nổi bật nhất cho mỗi ngôn ngữ
 			int limit = Math.min(3, courses.size());
 			for (int i = 0; i < limit; i++) {
 				Course c = courses.get(i);
-				RatingInfo info = calculateAvtRatingAndNumberStudent(c);
-				recommendCourses.add(CourseTransForm.transformToCourseInfDto(c, info.numStudent(), info.avgRating()));
+				CourseMetrics metrics= c.getCourseMetrics();
+				recommendCourses.add(CourseTransForm.transformToCourseInfDto(c, metrics.getTotalStudents(), metrics.getAverageRating()));
 			}
 		}
 
 		return recommendCourses;
 	}
 
-	private double countWeightOfCourse(double avgRating, int numberStudent) {
-		double normalizedStudent = Math.log10(numberStudent + 1); // tránh chênh lệch lớn
-		return 0.7 * avgRating + 0.3 * normalizedStudent;
-	}
 
-	// record để lưu tạm thông tin rating và số học viên
-	private record RatingInfo(double avgRating, int numStudent) {
-	}
 
-	private RatingInfo calculateAvtRatingAndNumberStudent(Course course) {
-		List<Enrollment> enrollments = enrollmentRepository.findByCourse(course);
 
-		if (enrollments.isEmpty())
-			return new RatingInfo(0, 0);
-
-		int total = 0;
-		double sumRating = 0;
-
-		for (Enrollment e : enrollments) {
-			if (e.getFeedback() != null) {
-				total++;
-				sumRating += e.getFeedback().getRate();
-			}
-		}
-
-		double avgRating = total > 0 ? sumRating / total : 0;
-		return new RatingInfo(avgRating, enrollments.size());
-	}
 
 	// tìm kiếm theo name + language+ creatorName+description
 	public Page<CourseInfDto> searchByKey(String searchKey, int page, int size) {
@@ -122,8 +85,8 @@ public class CourseInfService {
 
 	    List<CourseInfDto> dtoList = coursesPage.getContent().stream()
 	        .map(course -> {
-	            RatingInfo info = calculateAvtRatingAndNumberStudent(course);
-	            return CourseTransForm.transformToCourseInfDto(course, info.numStudent(), info.avgRating());
+
+	            return CourseTransForm.transformToCourseInfDto(course,course.getCourseMetrics().getTotalStudents(),course.getCourseMetrics().getAverageRating());
 	        })
 	        .collect(Collectors.toList());
 
@@ -143,9 +106,8 @@ public class CourseInfService {
 
 	public CourseDescriptionDto mapToCourseDescriptionDto(Course course) {
 		// Statistics
-		int totalStudents = courseRepository.countEnrollmentsByCourseId(course.getCourseId());
-		int totalFeedbacks = courseRepository.countFeedbacksByCourseId(course.getCourseId());
-		Double avgRating = courseRepository.getAverageRatingByCourseId(course.getCourseId());
+         CourseMetrics metrics=course.getCourseMetrics();
+		Double avgRating= metrics.getAverageRating();
 
 		// Creator info
 		Creator creator = course.getCreator();
@@ -163,12 +125,12 @@ public class CourseInfService {
 
 		return CourseDescriptionDto.builder().courseId(course.getCourseId()).name(course.getName())
 				.description(course.getDescription()).language(course.getLanguage())
-				.teachingLanguage(course.getTeachingLanguage()).price(course.getPrice()).urlImg(course.getUrlImg())
+				.teachingLanguage(course.getTeachingLanguage()).urlImg(course.getUrlImg())
 				.createdAt(course.getCreatedAt()).lastUpdate(course.getLastUpdate()).isPublic(course.isPublic())
 				.isBan(course.isBan()).accessMode(course.getAccessMode() != null ? course.getAccessMode().name() : null)
 				.learningObject(course.getLearningObject()).requirements(course.getRequirements())
 				.targetAudience(course.getTargetAudience()).creator(creatorDto).chapters(chaptersDto)
-				.totalStudents(totalStudents).totalFeedbacks(totalFeedbacks)
+				.totalStudents(metrics.getTotalStudents()).totalFeedbacks(metrics.getTotalFeedbacks())
 				.averageRating(avgRating != null ? Math.round(avgRating * 10.0) / 10.0 : 0.0).totalModules(totalModules)
 				.feedbacks(feedbacksDto).build();
 	}
@@ -190,24 +152,21 @@ public class CourseInfService {
 	private List<FeedbackSimpleDto> getFeedbacksForCourse(Course course) {
 		List<Enrollment> enrollments = enrollmentRepository.findByCourse(course);
 
-		return enrollments.stream().filter(e -> e.getFeedback() != null && e.getCustomer() != null).map(enrollment -> {
+		return enrollments.stream().filter(e -> e.getFeedback() != null && e.getCustomerId() != null).map(enrollment -> {
 			Feedback feedback = enrollment.getFeedback();
-			Customer customer = enrollment.getCustomer();
+
 
 			return FeedbackSimpleDto.builder().feedbackId(feedback.getFeedbackId()).content(feedback.getContent())
 					.rate(feedback.getRate()).createDate(enrollment.getCreateDate().toLocalDate())
-					.customer(CustomerSimpleDto.builder().customerId(customer.getCustomerId())
-							.fullName(customer.getGivenName())
-
-							.build())
+					.customerId(enrollment.getCustomerId())
 					.build();
 		}).collect(Collectors.toList());
 	}
 
-	public List<CourseLearningCardDto> retrieveYourCourse(String email) {
-		Customer cus = this.customerRepository.findByEmail(email).get();
+	public List<CourseLearningCardDto> retrieveYourCourse(String customerId) {
+
 		List<CourseLearningCardDto> res = new ArrayList<>();
-		List<Enrollment> enrs = cus.getEnrollments();
+		List<Enrollment> enrs =this.enrollmentRepository.findByCustomerId(customerId);
 		enrs.forEach(e -> {
 
 			Course ce = e.getCourse();

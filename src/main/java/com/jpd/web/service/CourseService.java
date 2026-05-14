@@ -1,16 +1,14 @@
 package com.jpd.web.service;
 
-import java.io.IOException;
-import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.jpd.web.model.*;
+import com.jpd.web.repository.*;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,26 +18,7 @@ import com.jpd.web.dto.CourseFormDto;
 
 import com.jpd.web.dto.PopularCourseDTO;
 import com.jpd.web.exception.ApiException;
-import com.jpd.web.exception.CourseNotFoundException;
-import com.jpd.web.exception.CreatorNotFoundException;
 import com.jpd.web.exception.UnauthorizedException;
-import com.jpd.web.model.AccessMode;
-import com.jpd.web.model.Chapter;
-import com.jpd.web.model.Course;
-import com.jpd.web.model.Creator;
-import com.jpd.web.model.Customer;
-import com.jpd.web.model.Enrollment;
-import com.jpd.web.model.Module;
-import com.jpd.web.model.ModuleContent;
-import com.jpd.web.model.PendingImage;
-import com.jpd.web.model.Status;
-import com.jpd.web.model.TypeOfContent;
-import com.jpd.web.model.TypeOfFile;
-import com.jpd.web.repository.ChapterRepository;
-import com.jpd.web.repository.CourseRepository;
-import com.jpd.web.repository.CreatorRepository;
-import com.jpd.web.repository.EnrollmentRepository;
-import com.jpd.web.repository.ModuleContentRepository;
 
 import com.jpd.web.service.utils.CodeGenerator;
 import com.jpd.web.service.utils.ValidationResources;
@@ -54,12 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 public class CourseService {
 	@Autowired
 	private FireBaseService fireBaseService;
-	@Autowired
-	private EnrollmentRepository enrollmentRepository;
 
 	@Autowired
 	private CourseRepository courseRepository;
-	@Autowired
+    @Autowired
 	private ModuleContentRepository moduleContentRepository;
 	@Autowired
 	private CreatorRepository creatorRepository;
@@ -68,20 +45,8 @@ public class CourseService {
 	@Autowired
 	private CodeGenerator codeGenerator;
 
-	private void validatePaidCourseRequirements(Creator creator, CourseFormDto courseFormDto) {
-		// Check creator status
-		
-		if (creator.getStatus() != Status.SUCCESS) {
-			log.warn("Creator {} attempted to create paid course without verified status", creator.getCreatorId());
-			throw new UnauthorizedException(
-					"You must verify your payment information and certificate before creating paid courses");
-		}
-
-		// Check price
-		if (courseFormDto.getPrice() <= 0) {
-			throw new IllegalArgumentException("Price must be greater than 0 for paid courses");
-		}
-	}
+   @Autowired
+   private CourseMetricsRepository courseMetricsRepository;
 
 	private String uploadCourseImage(MultipartFile imgFile) {
 		try {
@@ -99,24 +64,22 @@ public class CourseService {
 	}
 
 	@Transactional
-	public Course createCourse(CourseFormDto courseFormDto, Long creatorId) {
+	public Course createCourse(CourseFormDto courseFormDto, String creatorId) {
 		log.info("Creating course '{}' for creator {}", courseFormDto.getName(), creatorId);
 
 		// Validate creator exists
-		Creator creator = resourceValidator.validateCreatorExists(creatorId);
+
 
 		// Transform DTO to entity
 		Course course = CourseTransForm.transformFromCourseFormDto(courseFormDto);
 
 		// Validate paid course requirements
-		if (course.getAccessMode() == AccessMode.PAID) {
-			validatePaidCourseRequirements(creator, courseFormDto);
-		}
+
 
 		// Upload course image
 		String imgUrl = uploadCourseImage(courseFormDto.getImgFile());
 		course.setUrlImg(imgUrl);
-
+        Creator creator=this.creatorRepository.findById(creatorId).get();
 		// Set creator
 		course.setCreator(creator);
 
@@ -126,13 +89,24 @@ public class CourseService {
 		
        
 		Course savedCourse = courseRepository.save(course);
-		
+		CourseMetrics metrics = CourseMetrics.builder()
+				.course(savedCourse)
+				.instructorName(creator.getFullName())
+				.totalStudents(0)
+				.totalFeedbacks(0)
+				.averageRating(0.0)
+				.totalRating(0)
+
+				.totalPeopleLike(0)
+				.totalReport(0)
+				.build();
+		courseMetricsRepository.save(metrics);
 		log.info("Successfully created course {} for creator {}", savedCourse.getCourseId(), creatorId);
 
 		return savedCourse;
 	}
 
-	public List<CourseCardDto> retrieveCourseByemail(long creatorId)  {
+	public List<CourseCardDto> retrieveCourseByemail(String creatorId)  {
 		Optional<Creator> c = this.creatorRepository.findById(creatorId);
 
 		List<Course> courses = c.get().getCourses();
@@ -140,7 +114,7 @@ public class CourseService {
 	}
 
 	@Transactional
-	public CourseContentDto getCourseById(long courseId, long creatorId)  {
+	public CourseContentDto getCourseById(long courseId, String creatorId)  {
 
 		log.info("Retrieving course {} for creator {}", courseId, creatorId);
 
@@ -148,28 +122,29 @@ public class CourseService {
 		Course course = resourceValidator.validateCourseOwnership(courseId, creatorId);
 
 		course.getChapters().forEach(chapter -> {
-			chapter.getModules();
-			/*.forEach(module -> {
+			chapter.getModules().forEach(module -> {
+				module.setContentTypes(this.moduleContentRepository.findTypeOfContentByModuleId(module.getModuleId()));
+			});
 
-				List<ModuleContent> contents = this.moduleContentRepository.findByModule(module);
 
-				module.setModuleContent(contents);
-			});*/
 		});
 		CourseContentDto cdto = CourseTransForm.transformToCourseContentDto(course);
 		return cdto;
 	}
-  public List<PopularCourseDTO > retrieveCCourse(long creatorId){
-	  Creator creator=this.resourceValidator.validateCreatorExists(creatorId);
-	  List<Course> paidCourses = creator.getCourses();
-	  List<PopularCourseDTO>ppc=paidCourses.stream().map(e->CreatorTransform.transform(e)).collect(Collectors.toList());
-     return ppc;
-  }
-  public void changeCourseSatus(long courseId, long creatorId) {
+
+  public void changeCourseSatus(long courseId, String creatorId) {
 	  Course c=this.resourceValidator.validateCourseOwnership(courseId, creatorId);
 	  c.setPublic(!c.isPublic());
 	  courseRepository.save(c);
 	  return;
   }
 
+	public List<PopularCourseDTO > retrieveCCourse(String creatorId){
+		Creator creator=this.creatorRepository.findById(creatorId).get();
+		List<Course> paidCourses = creator.getCourses().stream()
+
+				.toList();
+		List<PopularCourseDTO>ppc=paidCourses.stream().map(e->CreatorTransform.transform(e)).collect(Collectors.toList());
+		return ppc;
+	}
 }

@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
             ModuleNotFoundException.class,
             ModuleContentNotFoundException.class,
             CreatorNotFoundException.class,
-            CustomerNotFoundException.class
+
     })
     public ResponseEntity<ErrorResponse> handleNotFound(
             BusinessException e,
@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EnrollmentExistException.class,
             CreatorAlreadyExistsException.class,
-            PaymentEmailAlreadyExistsException.class,
+
             WishlistExistException.class
     })
     public ResponseEntity<ErrorResponse> handleConflict(
@@ -139,8 +139,7 @@ public class GlobalExceptionHandler {
     // ===== 400 BAD REQUEST - Business Logic Errors =====
     @ExceptionHandler({
             ExceedLimitRequestException.class,
-            PayoutLimitExceededException.class,
-            WithdrawException.class,
+
             FileUploadException.class,
             ApiException.class,
             AIHandlerException.class,

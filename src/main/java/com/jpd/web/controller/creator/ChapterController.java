@@ -2,14 +2,14 @@ package com.jpd.web.controller.creator;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.jpd.web.model.Chapter;
 import com.jpd.web.service.ChapterService;
-import com.jpd.web.service.utils.RequestAttributeExtractor;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +30,11 @@ public class ChapterController {
             @RequestParam("chapterName") String name,
             @Positive(message = "Course ID must be positive") 
             @PathVariable("courseId") Long courseId,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal Jwt jwt) {
         
         log.info("Creating chapter '{}' for course {}", name, courseId);
         
-        Long creatorId = RequestAttributeExtractor.extractCreatorId(request);
+        String creatorId = jwt.getClaimAsString("sub");
         
         // ✅ KHÔNG cần try-catch - để GlobalExceptionHandler xử lý
         Chapter chapter = chapterService.createChapter(name, courseId, creatorId);
@@ -49,11 +49,11 @@ public class ChapterController {
             @PathVariable("chapterId") Long chapterId,
             @Positive(message = "Course ID must be positive") 
             @PathVariable("courseId") Long courseId,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal Jwt jwt) {
         
         log.info("Deleting chapter {} from course {}", chapterId, courseId);
         
-        Long creatorId =RequestAttributeExtractor.extractCreatorId(request);
+        String creatorId= jwt.getClaimAsString("sub");
         
         // ✅ KHÔNG cần try-catch - để GlobalExceptionHandler xử lý
         chapterService.deleteChapter(chapterId, courseId, creatorId);
@@ -61,10 +61,10 @@ public class ChapterController {
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/{chapterID}/update")
-    public ResponseEntity<?>updateChapter(@RequestParam String name ,HttpServletRequest request,
+    public ResponseEntity<?>updateChapter(@RequestParam String name ,@AuthenticationPrincipal Jwt jwt,
     		@PathVariable("chapterID")long chapterId){
   
-    	Long creatorId =RequestAttributeExtractor.extractCreatorId(request);
+    	String creatorId=jwt.getClaimAsString("sub");
     	this.chapterService.updateChapter(creatorId, name, chapterId);
     	return ResponseEntity.noContent().build();
     }

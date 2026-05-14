@@ -26,7 +26,7 @@ public class Creator_code_changeP {
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 @Column(name="ccc_id")
 private long cccId;
-private long creatorId;
+private String creatorId;
 @CreationTimestamp
 private LocalDateTime creaTime;
 private String code;

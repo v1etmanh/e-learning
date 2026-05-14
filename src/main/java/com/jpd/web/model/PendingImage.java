@@ -23,7 +23,7 @@ public class PendingImage {
 @Column(name = "pd_id")
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private long pdId;
-private  long creatorId;
+private  String creatorId;
 private String url;
 private Status status;
 @CreationTimestamp

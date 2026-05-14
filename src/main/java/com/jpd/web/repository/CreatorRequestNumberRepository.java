@@ -11,5 +11,5 @@ import java.util.Optional;
 
 @Repository
 public interface CreatorRequestNumberRepository  extends CrudRepository<CreatorRequestNumber, Long>{
-Optional<CreatorRequestNumber>  findByCreatorId(long creatorId);
+Optional<CreatorRequestNumber>  findByCreatorId(String creatorId);
 }

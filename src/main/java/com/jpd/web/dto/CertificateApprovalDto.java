@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CertificateApprovalDto {
-    private Long creatorId;
+    private String creatorId;
     private String fullName;
     private List<String> certificateUrls;
     private Date submittedAt;

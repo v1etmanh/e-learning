@@ -158,7 +158,7 @@ public class QuizWebSocketController {
                 )
             );
             
-            System.out.println("✅ Question sent: " + response.getQuestionId());
+
             
         } catch (QuizCompletedException e) {
             // Hết câu hỏi rồi → Broadcast QUIZ_ENDED

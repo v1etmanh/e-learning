@@ -51,8 +51,7 @@ public class CommentFilterService {
                 }
             }
             
-            System.out.println("✅ Loaded " + blacklistMap.size() + " blacklist words");
-            
+
         } catch (Exception e) {
             System.err.println("❌ Error loading blacklist: " + e.getMessage());
         }
@@ -70,7 +69,7 @@ public class CommentFilterService {
         
         String normalized = normalizeText(comment);
         double score = calculateScore(normalized);
-        System.out.print(score);
+
         return score >= THRESHOLD;
     }
     

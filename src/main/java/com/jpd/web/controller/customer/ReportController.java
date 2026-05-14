@@ -22,8 +22,8 @@ public class ReportController {
 @PostMapping()
 public ResponseEntity<?> createNewReport(@RequestBody ReportForm entity,@AuthenticationPrincipal Jwt jwt) {
     //TODO: process POST request
-	String email=jwt.getClaimAsString("email");
-    this.reportService.saveReport(email, entity);
+	String customerId = jwt.getClaimAsString("sub");
+    this.reportService.saveReport(customerId, entity);
     return null;
 }
 

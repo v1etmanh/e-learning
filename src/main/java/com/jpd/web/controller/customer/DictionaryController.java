@@ -31,31 +31,31 @@ public class DictionaryController {
    private DictionaryService dictionaryService;
     @GetMapping()
     public ResponseEntity<List<RememberWordDto>> getDictionary(@AuthenticationPrincipal Jwt jwt){
-    	     String email=jwt.getClaimAsString("email");
+        String customerId = jwt.getClaimAsString("sub");
     	     
-       List<RememberWordDto> rememberWordDtoList= dictionaryService.getDictionary(email);
+       List<RememberWordDto> rememberWordDtoList= dictionaryService.getDictionary(customerId);
         return  ResponseEntity.ok(rememberWordDtoList);
     }
     @PostMapping()
     public ResponseEntity<RememberWordDto> addDictionary(@AuthenticationPrincipal Jwt jwt,@RequestBody RememberWordDto rememberWordDto){
         log.info("Post add new remember word customer {} , remember word :{}",rememberWordDto.getDescription());
-       String email=jwt.getClaimAsString("email");
+        String customerId = jwt.getClaimAsString("sub");
      
-        RememberWordDto wordDto= dictionaryService.addRememberWord(email,rememberWordDto);
+        RememberWordDto wordDto= dictionaryService.addRememberWord(customerId,rememberWordDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(wordDto);
     }
     @DeleteMapping("/{rwId}")
     public ResponseEntity<Void> deleteDictionary(@PathVariable("rwId") long id,@AuthenticationPrincipal
     		Jwt jwt){
-    	String email=jwt.getClaimAsString("email");
-        dictionaryService.deleteRememberWord(email,id);
+        String customerId = jwt.getClaimAsString("sub");
+        dictionaryService.deleteRememberWord(customerId,id);
         return ResponseEntity.noContent().build();
     }
     @PutMapping
     public ResponseEntity<RememberWordDto> updateDictionary(@AuthenticationPrincipal
     		Jwt jwt,@RequestBody RememberWordDto rememberWordDto){
-    	String email=jwt.getClaimAsString("email");
-       RememberWordDto update = dictionaryService.updateRememberWord(email, rememberWordDto);
+        String customerId = jwt.getClaimAsString("sub");
+       RememberWordDto update = dictionaryService.updateRememberWord(customerId, rememberWordDto);
         return ResponseEntity.ok().body(update);
     }
 

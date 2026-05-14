@@ -1,6 +1,7 @@
 package com.jpd.web.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class MultipleChoiceOption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "mco_id")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) 
     private long mcoId;
     private String optionText;
     @Column(nullable = false)

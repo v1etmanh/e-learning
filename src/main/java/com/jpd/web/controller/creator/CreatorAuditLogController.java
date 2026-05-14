@@ -2,7 +2,6 @@ package com.jpd.web.controller.creator;
 
 import com.jpd.web.model.AuditLog;
 import com.jpd.web.service.AuditLogService;
-import com.jpd.web.service.utils.RequestAttributeExtractor;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +20,7 @@ public class CreatorAuditLogController {
     private AuditLogService auditLogService;
     @GetMapping()
     public ResponseEntity<?> getAuditLog(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request){
-        long creatorId= RequestAttributeExtractor.extractCreatorId(request);
+      String creatorId =jwt.getClaimAsString("sub");
         List <AuditLog> as=this.auditLogService.getLogsByCreator(creatorId);
         return ResponseEntity.ok(as);
     }

@@ -24,7 +24,6 @@ public interface ModuleRepository extends JpaRepository<Module, Long> {
 	@Query("DELETE FROM Module m WHERE m.moduleId = :moduleId")
 	void deleteByModuleId(@Param("moduleId") Long moduleId);
 
-	@Query("SELECT DISTINCT mc.typeOfContent FROM Module m " + "JOIN m.moduleContent mc WHERE m.moduleId = :moduleId")
 	List<TypeOfContent> findTypeOfContentByModuleId(@Param("moduleId") Long moduleId);
 
 }

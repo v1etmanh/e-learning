@@ -1,13 +1,9 @@
 package com.jpd.web.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.management.RuntimeErrorException;
-
+import jdk.jfr.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.jpd.web.controller.creator.CourseController;
@@ -16,7 +12,6 @@ import com.jpd.web.exception.ModuleNotFoundException;
 import com.jpd.web.exception.UnauthorizedException;
 import com.jpd.web.model.Course;
 import com.jpd.web.model.Creator;
-import com.jpd.web.model.Customer;
 import com.jpd.web.model.CustomerModuleContent;
 import com.jpd.web.model.Enrollment;
 import com.jpd.web.model.Module;
@@ -49,25 +44,27 @@ public class CourseLearningService {
         this.courseController = courseController;
     }
     @Transactional()
-    public CourseContentDto getCourseById(long courseId, String email) {
-        log.info("Retrieving course {} for user {}", courseId, email);
+    public CourseContentDto getCourseById(long courseId, String customerId) {
+        log.info("Retrieving course {} for user {}", courseId, customerId);
         
         Course course = this.validationResources.validateCourseExists(courseId);
-        Customer customer = this.validationResources.validateCustomerExist(email);
-        Creator creator = customer.getCreator();
+
+
         
         // Check nếu course không public
        
         
         // Case 1: Creator xem course của chính mình
-        if (creator != null && course.getCreator().getCreatorId() == creator.getCreatorId()) {
+        if (course.getCreator().getCreatorId().equals(customerId)) {
             log.info("Creator accessing their own course {}", courseId);
             
             // Force load lazy collections trong transaction
             course.getChapters().forEach(chapter -> {
                 chapter.getModules().forEach(module -> {
                     // Trigger lazy loading
-                    module.getCustomerModuleContents().size();
+					Set<TypeOfContent> types=this.moduleContentRepository.findTypeOfContentByModuleId(module.getModuleId());
+					module.setContentTypes(types);
+
                 });
             });
             
@@ -78,7 +75,7 @@ public class CourseLearningService {
         else {
         	 
             log.info("Student accessing enrolled course {}", courseId);
-            Enrollment enrollment = validationResources.validateCustomerWithCourseGetE(email, courseId);
+            Enrollment enrollment = validationResources.validateCustomerWithCourseGetE(customerId, courseId);
             course = enrollment.getCourse();
             if (!course.isPublic()) {
                 throw new UnauthorizedException("This course does not exist");
@@ -88,11 +85,10 @@ public class CourseLearningService {
             // Filter content theo enrollment và force load trong transaction
             course.getChapters().forEach(chapter -> {
                 chapter.getModules().forEach(module -> {
-                    List<CustomerModuleContent> filteredContents = module.getCustomerModuleContents().stream()
-                        .filter(content -> content.getEnrollment().getEnrollId() == enrollmentId)
-                        .collect(Collectors.toList());
-                    
-                    module.setCustomerModuleContents(filteredContents);
+					Set<TypeOfContent> types=this.moduleContentRepository.findTypeOfContentByModuleId(module.getModuleId());
+					Optional<CustomerModuleContent> cmds=contentRepository.findByEnrollmentAndModule(enrollment, module);
+					module.setContentTypes(types);
+
                 });
             });
             
@@ -102,7 +98,7 @@ public class CourseLearningService {
 	@Transactional
 	public List<ModuleContent>getModuleContentsByTypeAndModuleId( TypeOfContent type, Long moduleId, Long chapterId, Long courseId, String email){
 		Module module = validationResources.validateModuleContentOwnerShip(moduleId, chapterId, courseId, email);
-		List<ModuleContent> mds=this.moduleContentRepository.findByTypeOfContentAndModule(type, module);
+		List<ModuleContent> mds=this.moduleContentRepository.findByTypeOfContentAndModuleId(type, moduleId);
 		
 		List<ModuleContent>res=new ArrayList<ModuleContent>();
 		for(ModuleContent md:mds) {
@@ -124,7 +120,8 @@ public class CourseLearningService {
 		Module m=md.get();
 		if(m.getChapter().getCourse().getCourseId()!=courseId)
 			throw new UnauthorizedException("ban khong co quyen thuc hien tren khoa hc khac");
-		if(!m.getContentTypes().contains(typeOfContent))
+		Set<TypeOfContent>ts=this.moduleContentRepository.findTypeOfContentByModuleId(moduleId);
+		if(!ts.contains(typeOfContent))
 		throw new RuntimeException("module khong chua content do");
 		Optional<CustomerModuleContent>cmds= contentRepository.findByEnrollmentAndModule(e,m);
 		CustomerModuleContent x;

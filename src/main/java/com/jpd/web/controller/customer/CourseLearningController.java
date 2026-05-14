@@ -25,32 +25,31 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/api/customer/learning/{courseId}")
 public class CourseLearningController {
 
-    private final CreatorRepository creatorRepository;
+
 @Autowired
 private CourseLearningService courseLearningService;
 
-    CourseLearningController(CreatorRepository creatorRepository) {
-        this.creatorRepository = creatorRepository;
-    }
+
+
 @GetMapping("/courseOverview")
 public ResponseEntity<CourseContentDto> getMethodName(@AuthenticationPrincipal Jwt jwt,
 		@PathVariable("courseId")long courseId) {
-    CourseContentDto contentDto=this.courseLearningService.getCourseById(courseId, jwt.getClaimAsString("email"));
+    CourseContentDto contentDto=this.courseLearningService.getCourseById(courseId, jwt.getClaimAsString("sub"));
     return ResponseEntity.ok(contentDto);
 }
 @GetMapping("/{chapterId}/{moduleId}/moduleContent")
 public ResponseEntity<?> retrieveModuleContent(@RequestParam("typeOfContent")TypeOfContent typeOfContent,
 		@AuthenticationPrincipal Jwt jwt,@PathVariable("courseId")long courseId ,
 		@PathVariable("chapterId")long chapterId,@PathVariable("moduleId")long moduleId){
-	String email=jwt.getClaimAsString("email");
-	List<ModuleContent>mds=this.courseLearningService.getModuleContentsByTypeAndModuleId(typeOfContent, moduleId, chapterId, courseId, email);
+	String customerId=jwt.getClaimAsString("sub");
+	List<ModuleContent>mds=this.courseLearningService.getModuleContentsByTypeAndModuleId(typeOfContent, moduleId, chapterId, courseId, customerId);
 	return ResponseEntity.ok(mds);
 	
 }
 @PostMapping("/{moduleId}/finish_content")
 public ResponseEntity<?> updateCustomerWithModuleContent(@PathVariable("courseId")long courseId,@PathVariable("moduleId")long moduleId,@RequestParam("type") TypeOfContent typeOfContent,@AuthenticationPrincipal Jwt jwt)
-{ String email=jwt.getClaimAsString("email");
-		this.courseLearningService.updateCustomerFinishModule(courseId, email, moduleId, typeOfContent);
+{ String customerId=jwt.getClaimAsString("sub");
+		this.courseLearningService.updateCustomerFinishModule(courseId, customerId, moduleId, typeOfContent);
 		return ResponseEntity.noContent().build();
 	}
 }

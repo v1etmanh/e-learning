@@ -2,13 +2,10 @@ package com.jpd.web.service;
 
 import com.jpd.web.dto.RememberWordDto;
 import com.jpd.web.exception.UnauthorizedException;
-import com.jpd.web.model.Customer;
 import com.jpd.web.model.RememberWord;
 import com.jpd.web.repository.RememberWordRepository;
 import com.jpd.web.service.utils.ValidationResources;
 import com.jpd.web.transform.RememberTransform;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,31 +19,29 @@ import java.util.Optional;
 public class DictionaryService {
 @Autowired
    private RememberWordRepository repository;
-@Autowired
-    private ValidationResources validationResources;
+
 
    
  
-    public List<RememberWordDto> getDictionary(String email) {
-        List<RememberWord> rememberWords = repository.findAllByCustomer_Email(email);
+    public List<RememberWordDto> getDictionary(String customerId) {
+        List<RememberWord> rememberWords = repository.findAllByCustomerId(customerId);
         return rememberWords.stream().map(e->RememberTransform.toRememberWordDto(e)).toList();
     }
-    public RememberWordDto addRememberWord(String email,RememberWordDto rememberWordDto) {
-            Customer customer = validationResources.validateCustomerExist(email);
-            if(customer != null){
+    public RememberWordDto addRememberWord(String customerId,RememberWordDto rememberWordDto) {
+
+
                 RememberWord rememberWord = RememberTransform.toRememberWord(rememberWordDto);
                
-                rememberWord.setCustomer(customer);
+                rememberWord.setCustomerId(customerId);
                 repository.save(rememberWord);
                 log.info("success to add new remember word {}", rememberWord.getWord());
                 return rememberWordDto;
-            }
-            return null;
+
     }
-    public RememberWordDto updateRememberWord(String email,RememberWordDto rememberWordDto) {
+    public RememberWordDto updateRememberWord(String customerId,RememberWordDto rememberWordDto) {
        
        long id=rememberWordDto.getRwId();
-       validate(email,id);
+       validate(customerId,id);
     	RememberWord rememberWord= repository.findById(rememberWordDto.getRwId()).orElseThrow(()-> new RuntimeException("Remember word not found"));
         //so sanh voi ai nguoi dung
           RememberWord re=RememberTransform.toRememberWord(rememberWordDto);
@@ -55,16 +50,16 @@ public class DictionaryService {
           this.repository.save(re);
           return rememberWordDto;
     }
-    public void deleteRememberWord(String email,long id) {
-    	 validate(email,id);
+    public void deleteRememberWord(String customerId,long id) {
+    	 validate(customerId,id);
   
         repository.deleteById(id);
     }
-    private void validate(String email ,long id) {
-    	Customer customer=validationResources.validateCustomerExist(email);
+    private void validate(String customerId ,long id) {
+
    	 Optional< RememberWord> re=this.repository.findById(id);
    	  if(re.isEmpty())throw new RuntimeException("this id is not exist");
-   	if(  re.get().getCustomer().getCustomerId()!=customer.getCustomerId())
+   	if(  re.get().getCustomerId().equals(customerId))
    		throw new UnauthorizedException("you do not own this word");
     }
 }

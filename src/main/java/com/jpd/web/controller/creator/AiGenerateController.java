@@ -1,39 +1,28 @@
 package com.jpd.web.controller.creator;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.jpd.web.dto.GenerateFeedbackForm;
-import com.jpd.web.exception.AIHandlerException;
-import com.jpd.web.exception.ExceedLimitRequestException;
 import com.jpd.web.model.CreatorRequestNumber;
 import com.jpd.web.repository.CreatorRequestNumberRepository;
 import com.jpd.web.service.AIService;
 import com.jpd.web.service.FireBaseService;
-import com.jpd.web.service.utils.RequestAttributeExtractor;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 
 @RequestMapping("/api/creator/AI")
 @RestController
-public class AiGenerateController {
+public class  AiGenerateController {
 	@Autowired
 	private AIService aiService;
 	@Autowired
@@ -41,7 +30,7 @@ public class AiGenerateController {
 	@Autowired
 	private FireBaseService fireBaseService;
 	@Transactional
-	public boolean canMakeRequest(long creatorId) {
+	public boolean canMakeRequest(String creatorId) {
 	    Optional<CreatorRequestNumber> existing = 
 	        creatorRequestNumberRepository.findByCreatorId(creatorId);
 	    
@@ -85,22 +74,6 @@ public class AiGenerateController {
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(feedBack);
 	}
-	/*
-	 * @PostMapping("/task1/analyze") public ResponseEntity<?>
-	 * analyzeTask1(HttpServletRequest request,
-	 * 
-	 * @RequestParam("imgUrl") String imgUrl, // 🔄 Đổi từ img -> imgUrl
-	 * 
-	 * @RequestParam("question") String question) throws AIHandlerException {
-	 * 
-	 * long creatorId = RequestAttributeExtractor.extractCreatorId(request);
-	 * if(!canMakeRequest(creatorId)) throw new
-	 * ExceedLimitRequestException("you exceed limit in this day");
-	 * 
-	 * // Gọi service với URL List<String> features =
-	 * aiService.analyzeTask1ImageFromUrl(imgUrl, question);
-	 * 
-	 * return ResponseEntity.status(HttpStatus.CREATED).body(features); }
-	 */
+
 	
 }

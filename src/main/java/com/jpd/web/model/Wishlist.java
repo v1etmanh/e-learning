@@ -26,9 +26,7 @@ public class Wishlist {
 
 
     //link to Customer
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    private String customerId;
 
 
     //link to Course

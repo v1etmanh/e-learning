@@ -22,10 +22,9 @@ import java.util.List;
 @Builder
 public class Creator {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     @Column(name = "creator_id")
-    private long creatorId;
+    private String creatorId;
     @Column(nullable = false)
     private double balance;
     @Column(name = "create_date")
@@ -42,6 +41,7 @@ public class Creator {
     @Column(name = "payment_email")
     private String paymentEmail;
     @Column(name = "title_self")
+   @Lob
     private String titleSelf;
     @ElementCollection
     @CollectionTable(
@@ -53,12 +53,7 @@ public class Creator {
     @Column(name = "status")
     private Status status;
 
-    //link to Customer
-    @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "customer_id")
-    @JsonIgnore
-    @ToString.Exclude 
-    private Customer customer;
+
 
     //link to Course
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "creator")
@@ -69,17 +64,8 @@ public class Creator {
     @JsonManagedReference("creator-kahoot")
     private List<KahootListFunction> kahootListFunctions;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "creator")
-    @JsonManagedReference("creator-withdraw")
-    private List<Withdraw> withdrawList;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "creator")
-    @JsonManagedReference("creator-payout")
-    private List<PayoutTracking> payoutTrackings;
-    
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "creator",fetch = FetchType.LAZY)
-    @JsonManagedReference("creator-monthlyBalance")
-    private List<MonthlyCreatorBalance> monthlyBalances;
+
 private boolean ban;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "creator",fetch = FetchType.LAZY)
     @JsonManagedReference("creator-warning")

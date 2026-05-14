@@ -21,7 +21,6 @@ public class AdminCourseDto {
 	private long creatorId;
 	private boolean isBan;
 
-	private long price;
 	private Language language;
 
 	private int  numberReports;

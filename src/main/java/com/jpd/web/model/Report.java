@@ -30,11 +30,7 @@ public class Report {
     @JoinColumn(name = "course_id")
     @JsonBackReference("course-report")
     private Course course;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
-    @JsonBackReference("customer-report")
-    private Customer customer;
+    private String customerId;
 
     @Column(name = "status")
     private String status = "NEW"; // NEW, REVIEWING, RESOLVED, DISMISSED

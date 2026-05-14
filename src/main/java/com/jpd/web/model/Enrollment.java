@@ -34,19 +34,14 @@ public class Enrollment {
     private Course course;
 
     //link to Customer
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
-    @JsonBackReference("customer-enrollment")  // ← Thêm tên
-    private Customer customer;
+   private String customerId;
 
     //link to feedback
     @OneToOne(mappedBy = "enrollment", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("enrollment-feedback")
     private Feedback feedback;
 
-    //link to Transaction
-    @OneToOne(mappedBy = "enrollment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private CustomerTransaction transaction;
+
     @OneToMany(mappedBy = "enrollment", cascade = CascadeType.ALL)
     @JsonManagedReference("enrollment-customerContent")  // ← ĐỔI thành 
     private List<CustomerModuleContent> customerModuleContents;
@@ -56,4 +51,5 @@ public class Enrollment {
     public void setUpFi() {
     	isFinish=false;
     }
+
 }

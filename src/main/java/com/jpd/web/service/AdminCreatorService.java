@@ -62,8 +62,8 @@ public class AdminCreatorService {
     }
 
     // Get creator detail
-    public AdminCreatorDetailDto getCreatorDetail(Long creatorId) {
-        Creator creator = validationResources.validateCreatorExists(creatorId);
+    public AdminCreatorDetailDto getCreatorDetail(String creatorId) {
+        Creator creator = this.creatorRepository.findById(creatorId).orElse(null);
         return toAdminCreatorDetailDto(creator);
     }
 
@@ -77,8 +77,8 @@ public class AdminCreatorService {
 
     // Approve certificate (BR-19)
     @Transactional
-    public void approveCertificate(Long creatorId, String adminEmail, String adminNote) {
-        Creator creator = validationResources.validateCreatorExists(creatorId);
+    public void approveCertificate(String creatorId, String adminEmail, String adminNote) {
+        Creator creator = this.creatorRepository.findById(creatorId).orElse(null);
 
         if (creator.getStatus() != Status.PENDING) {
             throw new IllegalStateException("Creator certificate is not pending approval");
@@ -98,14 +98,15 @@ public class AdminCreatorService {
 
     // Reject certificate
     @Transactional
-    public void rejectCertificate(Long creatorId, String reason, String adminEmail) {
-        Creator creator = validationResources.validateCreatorExists(creatorId);
+    public void rejectCertificate(String creatorId, String reason, String adminEmail) {
+        Creator creator = this.creatorRepository.findById(creatorId).orElse(null);
 
         if (creator.getStatus() != Status.PENDING) {
             throw new IllegalStateException("Creator certificate is not pending approval");
         }
 
         creator.setStatus(Status.REJECTED);
+
         creatorRepository.save(creator);
 
         auditLogService.logAction(
@@ -119,8 +120,8 @@ public class AdminCreatorService {
 
     // Warn creator (BR-10: Check if ≥3 warnings in 90 days → suspend)
     @Transactional
-    public void warnCreator(Long creatorId, String reason, String adminEmail) {
-        Creator creator = validationResources.validateCreatorExists(creatorId);
+    public void warnCreator(String creatorId, String reason, String adminEmail) {
+        Creator creator = this.creatorRepository.findById(creatorId).orElse(null);
 
         // Create warning record
         CreatorWarning warning = CreatorWarning.builder()
@@ -152,8 +153,8 @@ public class AdminCreatorService {
 
     // Ban creator
     @Transactional
-    public void banCreator(Long creatorId, String reason, Integer durationDays, String adminEmail) {
-        Creator creator = validationResources.validateCreatorExists(creatorId);
+    public void banCreator(String creatorId, String reason, Integer durationDays, String adminEmail) {
+        Creator creator = this.creatorRepository.findById(creatorId).orElse(null);
 
         creator.setBan(true);
 
@@ -187,8 +188,8 @@ public class AdminCreatorService {
 
     // Unban creator
     @Transactional
-    public void unbanCreator(Long creatorId, String reason, String adminEmail) {
-        Creator creator = validationResources.validateCreatorExists(creatorId);
+    public void unbanCreator(String creatorId, String reason, String adminEmail) {
+        Creator creator = this.creatorRepository.findById(creatorId).orElse(null);
 
         creator.setBan(false);
         creator.setBannedUntil(null);
@@ -206,12 +207,12 @@ public class AdminCreatorService {
     }
 
     // Get violation history
-    public List<Report> getCreatorViolationHistory(Long creatorId) {
+    public List<Report> getCreatorViolationHistory(String creatorId) {
         return reportRepository.findByCreator_CreatorId(creatorId);
     }
 
     // Get audit logs for creator
-    public List<AuditLog> getCreatorAuditLog(Long creatorId) {
+    public List<AuditLog> getCreatorAuditLog(String creatorId) {
         return auditLogService.getLogsByCreator(creatorId);
     }
 
@@ -224,7 +225,6 @@ public class AdminCreatorService {
         return AdminCreatorListDto.builder()
                 .creatorId(creator.getCreatorId())
                 .fullName(creator.getFullName())
-                .email(creator.getCustomer() != null ? creator.getCustomer().getEmail() : null)
                 .imageUrl(creator.getImageUrl())
                 .status(creator.getStatus())
                 .balance(creator.getBalance())
@@ -267,7 +267,6 @@ public class AdminCreatorService {
         return AdminCreatorDetailDto.builder()
                 .creatorId(creator.getCreatorId())
                 .fullName(creator.getFullName())
-                .email(creator.getCustomer() != null ? creator.getCustomer().getEmail() : null)
                 .phone(creator.getMobiPhone())
                 .titleSelf(creator.getTitleSelf())
                 .imageUrl(creator.getImageUrl())
@@ -301,7 +300,7 @@ public class AdminCreatorService {
 
     private CourseCardDto toCourseCardDto(Course course) {
         int studentCount = course.getEnrollments() != null ? course.getEnrollments().size() : 0;
-        double totalRevenue = course.getPrice() * studentCount;
+
 
         double avgRating = 0.0;
         int reviewCount = 0;
@@ -322,7 +321,7 @@ public class AdminCreatorService {
                 course.getCreatedAt(),
                 studentCount,
                 reviewCount,
-                totalRevenue,
+
                 avgRating,
                 course.getUrlImg(),
                 course.getAccessMode(),

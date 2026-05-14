@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.bind.Name;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -38,6 +39,7 @@ public class ReadingQuestion  {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="rq_id")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY) 
 	private long rqId;
     private String question;
     @ElementCollection(fetch = FetchType.EAGER)

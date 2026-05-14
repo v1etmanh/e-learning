@@ -16,5 +16,5 @@ public class WishlistDto {
 private long courseId;
 private String course_name;
 private String course_img;
-private double course_price;
+
 }

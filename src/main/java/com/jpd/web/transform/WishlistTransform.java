@@ -11,7 +11,7 @@ public static WishlistDto transformToWishlistDto(Wishlist wishlist)
 		.course_img(course.getUrlImg())
 		.course_name(course.getName())
 		.courseId(course.getCourseId())
-		.course_price(course.getPrice())
+
 		.build();
 return s;
 	}

@@ -13,19 +13,54 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 public class JwtRoleConverted implements Converter<Jwt, Collection<GrantedAuthority>>{
 
+	private static final String CLIENT_ID = "backended-service";
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public Collection<GrantedAuthority> convert(Jwt source) {
-		System.out.print("đá");
-		// TODO Auto-generated method stub
-		Map<String, Object>realmAccess=(Map<String,Object>)source.getClaims().get("realm_access");
-		if(realmAccess==null) {
-			return new ArrayList<>();
+
+		Collection<GrantedAuthority> authorities = new ArrayList<>();
+
+		/* ========= 1. realm_access.roles ========= */
+		Map<String, Object> realmAccess =
+				(Map<String, Object>) source.getClaims().get("realm_access");
+
+		if (realmAccess != null) {
+			Object rolesObj = realmAccess.get("roles");
+			if (rolesObj instanceof List<?>) {
+				authorities.addAll(
+						((List<String>) rolesObj).stream()
+								.map(role -> "ROLE_" + role.toUpperCase())
+								.map(SimpleGrantedAuthority::new)
+								.collect(Collectors.toList())
+				);
+			}
 		}
-		Collection<GrantedAuthority>collects=((List<String>)realmAccess.get("roles")).stream().map(roleName->"ROLE_"+roleName).
-				map(SimpleGrantedAuthority::new)
-				.collect(Collectors.toList());
-		return collects;
-		
+
+		/* ========= 2. resource_access.backended-service.roles ========= */
+		Map<String, Object> resourceAccess =
+				(Map<String, Object>) source.getClaims().get("resource_access");
+
+		if (resourceAccess != null) {
+
+			Map<String, Object> client =
+					(Map<String, Object>) resourceAccess.get(CLIENT_ID);
+
+			if (client != null) {
+				Object rolesObj = client.get("roles");
+
+				if (rolesObj instanceof List<?>) {
+					authorities.addAll(
+							((List<String>) rolesObj).stream()
+									.map(role -> "ROLE_" + role.toUpperCase())
+									.map(SimpleGrantedAuthority::new)
+									.collect(Collectors.toList())
+					);
+				}
+			}
+		}
+
+		return authorities;
 	}
 
 }

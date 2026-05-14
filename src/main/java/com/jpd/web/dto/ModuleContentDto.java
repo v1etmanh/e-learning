@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Data
 public class ModuleContentDto {
-private long courseId;
-private long chapterId;
 private long moduleId;
 private List<ModuleContent> moduleContent;
 }

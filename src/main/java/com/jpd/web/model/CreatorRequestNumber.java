@@ -28,7 +28,7 @@ public class CreatorRequestNumber {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 private long numberId;
 	@Column(unique = true)
-private long creatorId;
+private String creatorId;
 private int number;
 
 @CreationTimestamp

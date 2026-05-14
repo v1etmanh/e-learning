@@ -17,7 +17,7 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
 
     @Transactional
-    public void logAction(String actionType, Long targetCreatorId, String adminEmail, String reason) {
+    public void logAction(String actionType, String targetCreatorId, String adminEmail, String reason) {
         AuditLog auditLog = AuditLog.builder()
                 .actionType(actionType)
                 .targetCreatorId(targetCreatorId)
@@ -29,7 +29,7 @@ public class AuditLogService {
         log.debug("Audit log created: {} for creator {} by admin {}", actionType, targetCreatorId, adminEmail);
     }
 
-    public List<AuditLog> getLogsByCreator(Long creatorId) {
+    public List<AuditLog> getLogsByCreator(String creatorId) {
         return auditLogRepository.findByTargetCreatorIdOrderByTimestampDesc(creatorId);
     }
 

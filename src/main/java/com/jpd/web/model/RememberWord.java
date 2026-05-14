@@ -42,13 +42,10 @@ public class RememberWord {
     @Column(columnDefinition = "LONGTEXT", name = "example")
     @Lob
     private List<String> example = new ArrayList<>();
-    
+
 
     //link to Customer
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
-    @JsonBackReference
-    private Customer customer;
+   private String customerId;
     @ElementCollection
     @CollectionTable(
         name = "remember_word_vote",
