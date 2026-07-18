@@ -17,9 +17,8 @@ public final class UserInfoMapper {
     }
 
     public static UserInfoDto fromJwt(Jwt jwt) {
-
         List<String> roles = extractAllRoles(jwt);
-
+         for(String a: roles)System.out.print("d"+a);
         boolean isAdmin = roles.stream()
                 .anyMatch(r -> r.equalsIgnoreCase("ADMIN"));
 

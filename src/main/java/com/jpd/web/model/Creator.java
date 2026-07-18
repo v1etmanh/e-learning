@@ -53,6 +53,15 @@ public class Creator {
     @Column(name = "status")
     private Status status;
 
+    /**
+     * Kept in sync with the existing creator.upload_certificate column.
+     * The database column is NOT NULL, so new creators must always provide a
+     * value even though the flag is not currently part of the profile DTO.
+     */
+    @Column(name = "upload_certificate", nullable = false)
+    @Builder.Default
+    private boolean uploadCertificate = false;
+
 
 
     //link to Course
