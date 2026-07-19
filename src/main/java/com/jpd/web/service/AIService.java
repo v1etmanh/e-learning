@@ -57,6 +57,10 @@ public class AIService {
         return geminiAiService.generateContent(sb.toString());
     }
 
+    public String evaluateIeltsBrainstorm(String prompt) {
+        return geminiAiService.generateContent(prompt);
+    }
+
     /**
      * Evaluate writing and persist a WritingResult (customerId may be null).
      * Returns a Map normalized for the frontend: keys: grammar, vocabulary, feedback.

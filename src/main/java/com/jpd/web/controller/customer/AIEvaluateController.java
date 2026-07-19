@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 
 import com.jpd.web.dto.WritingScores;
 import com.jpd.web.dto.WritingTextEvaluateForm;
+import com.jpd.web.dto.IeltsBrainstormForm;
 import com.jpd.web.dto.MagicDiaryEvaluateForm;
 import com.jpd.web.dto.MagicDiaryScores;
 import com.jpd.web.dto.MagicDiaryQuestionForm;
@@ -85,5 +86,15 @@ public ResponseEntity<MagicDiaryQuestionResponse> askMagicDiaryQuestion(
             form.getLessonTitle(),
             form.getReferenceNotes(),
             customerId));
+}
+
+@PostMapping("/ielts-brainstorm")
+public ResponseEntity<?> evaluateIeltsBrainstorm(
+        @Valid @RequestBody IeltsBrainstormForm form,
+        @AuthenticationPrincipal Jwt jwt) {
+    // Optionally log or store who requested this using jwt
+    String response = aiService.evaluateIeltsBrainstorm(form.getPrompt());
+    // Wrap in a simple JSON object
+    return ResponseEntity.ok(java.util.Map.of("feedback", response));
 }
 }
