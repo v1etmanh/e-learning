@@ -15,6 +15,8 @@ import com.jpd.web.model.RememberWord;
 public interface RememberWordRepository extends JpaRepository<RememberWord,Long>{
 
 	List<RememberWord> findAllByCustomerId(String customerId);
+
+	List<RememberWord> findAllByCustomerIdAndWordIgnoreCase(String customerId, String word);
 	 
 
 }
