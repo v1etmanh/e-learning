@@ -12,6 +12,8 @@ import com.jpd.web.exception.AIHandlerException;
 import com.jpd.web.model.WritingResult;
 import com.jpd.web.repository.WritingResultRepository;
 import com.jpd.web.dto.WritingScores;
+import com.jpd.web.dto.MagicDiaryScores;
+import com.jpd.web.dto.MagicDiaryQuestionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -128,6 +130,77 @@ public class AIService {
         }
     }
 
+    public MagicDiaryScores evaluateMagicDiary(String writingText, String language, String lessonTitle,
+                                                String referenceNotes, String customerId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+        if (this.writingResultRepository.countTodayByCustomerId(customerId, startOfDay, endOfDay) >= 10) {
+            throw new AIHandlerException("You can only evaluate 10 times per day");
+        }
+
+        String prompt = buildMagicDiaryPrompt(writingText, language, lessonTitle, referenceNotes);
+        try {
+            String cleanJson = cleanJsonResponse(geminiAiService.generateContent(prompt));
+            Map<String, Object> result = objectMapper.readValue(cleanJson, new TypeReference<Map<String, Object>>() {});
+            double contentAccuracy = getScore(result, "contentAccuracy", "content_accuracy", "history");
+            double grammar = getScore(result, "grammar", "grammar_score");
+            double vocabulary = getScore(result, "vocabulary", "vocabulary_score");
+            String feedback = String.valueOf(result.getOrDefault("feedback", "No feedback provided"));
+            String nextStep = String.valueOf(result.getOrDefault("nextStep", "Review the lesson and write one more paragraph."));
+
+            writingResultRepository.save(WritingResult.builder()
+                    .customerId(customerId)
+                    .grammar(grammar)
+                    .vocabulary(vocabulary)
+                    .feedback(feedback)
+                    .build());
+
+            return MagicDiaryScores.builder()
+                    .contentAccuracy(contentAccuracy)
+                    .grammar(grammar)
+                    .vocabulary(vocabulary)
+                    .feedback(feedback)
+                    .nextStep(nextStep)
+                    .build();
+        } catch (Exception exception) {
+            log.error("Error evaluating magic diary writing", exception);
+            return MagicDiaryScores.builder()
+                    .contentAccuracy(5.0)
+                    .grammar(5.0)
+                    .vocabulary(5.0)
+                    .feedback("Could not evaluate. Please try again.")
+                    .nextStep("Review the key facts and rewrite your answer with one clearer detail.")
+                    .build();
+        }
+    }
+
+    public MagicDiaryQuestionResponse answerMagicDiaryQuestion(String question, String lessonTitle,
+                                                                 String referenceNotes, String customerId) {
+        String prompt = buildMagicDiaryQuestionPrompt(question, lessonTitle, referenceNotes);
+        try {
+            String cleanJson = cleanJsonResponse(geminiAiService.generateContent(prompt));
+            Map<String, Object> result = objectMapper.readValue(cleanJson, new TypeReference<Map<String, Object>>() {});
+            String status = String.valueOf(result.getOrDefault("status", "OUT_OF_SCOPE"));
+            String answer = String.valueOf(result.getOrDefault("answer", ""));
+            String correction = String.valueOf(result.getOrDefault("correction", ""));
+            String suggestedQuestion = String.valueOf(result.getOrDefault("suggestedQuestion", ""));
+            return MagicDiaryQuestionResponse.builder()
+                    .status(status)
+                    .answer(answer)
+                    .correction(correction)
+                    .suggestedQuestion(suggestedQuestion)
+                    .build();
+        } catch (Exception exception) {
+            log.error("Error answering magic diary question", exception);
+            return MagicDiaryQuestionResponse.builder()
+                    .status("ERROR")
+                    .answer("")
+                    .correction("Cuốn sách chưa thể đọc câu hỏi này. Hãy viết lại ngắn và rõ hơn.")
+                    .suggestedQuestion("What was one important change in the lesson?")
+                    .build();
+        }
+    }
+
     // ----- Helpers -----
 
     private String escapeForPrompt(String s) {
@@ -177,6 +250,61 @@ public class AIService {
             
             Be specific about grammar errors and vocabulary usage.
             """, language, writingText);
+    }
+
+    private String buildMagicDiaryPrompt(String writingText, String language, String lessonTitle,
+                                         String referenceNotes) {
+        return String.format("""
+                You are an expert %s history and English writing tutor.
+                Evaluate the learner's answer for the magic diary lesson: %s.
+                Compare the answer only with the verified lesson notes below; do not require exact wording.
+
+                VERIFIED LESSON NOTES:
+                %s
+
+                LEARNER'S WRITING:
+                %s
+
+                Return ONLY valid JSON with no markdown:
+                {
+                  "contentAccuracy": <score 0-10 based on historical facts and key ideas>,
+                  "grammar": <score 0-10 based on English grammar and sentence structure>,
+                  "vocabulary": <score 0-10 based on useful and accurate word choice>,
+                  "feedback": "short constructive feedback in Vietnamese",
+                  "nextStep": "one focused next practice task in Vietnamese"
+                }
+                Keep contentAccuracy separate from grammar and vocabulary.
+                """, language, escapeForPrompt(lessonTitle), escapeForPrompt(referenceNotes), escapeForPrompt(writingText));
+    }
+
+    private String buildMagicDiaryQuestionPrompt(String question, String lessonTitle, String referenceNotes) {
+        return String.format("""
+                You are the living hint inside a magical diary for the lesson: %s.
+                You are a strict retrieval-grounded tutor. You may use ONLY the verified lesson context below.
+                Never use outside facts, guesses, general knowledge, or information not supported by the context.
+
+                VERIFIED LESSON CONTEXT:
+                %s
+
+                LEARNER QUESTION:
+                %s
+
+                Follow this order exactly:
+                1. Check spelling and vocabulary/word choice in the learner question.
+                2. Estimate the ratio of incorrect or unintelligible words to the total words.
+                3. If the error ratio is greater than 20%%, do not answer the question. Return status CORRECTION_REQUIRED, give a concise corrected version in correction, leave answer empty, and provide a suggestedQuestion.
+                4. If the error ratio is 20%% or less, correct minor errors if needed and continue.
+                5. If the question is not answerable from the verified lesson context, return status OUT_OF_SCOPE, leave answer empty, and explain that the diary only answers questions about this lesson.
+                6. Otherwise return status ANSWERED and answer in clear, short English (2-4 sentences) using only the verified context.
+
+                Return ONLY valid JSON, with no markdown:
+                {
+                  "status": "ANSWERED|CORRECTION_REQUIRED|OUT_OF_SCOPE",
+                  "answer": "",
+                  "correction": "",
+                  "suggestedQuestion": ""
+                }
+                """, escapeForPrompt(lessonTitle), escapeForPrompt(referenceNotes), escapeForPrompt(question));
     }
 
     private double getScore(Map<String, Object> result, String... keys) {

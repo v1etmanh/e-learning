@@ -13,7 +13,9 @@ import java.util.Map;
 @Service
 public class GeminiAiService {
 
-    @Value("${gemini.api.key}")
+    // Prefer the environment variable in deployed environments. Keep the
+    // existing Spring property as a local-development fallback.
+    @Value("${gemini.api.key:${GEMINI_API_KEY:}}")
     private String apiKey;
 
     @Value("${gemini.api.url}")

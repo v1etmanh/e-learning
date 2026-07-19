@@ -8,9 +8,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 import com.jpd.web.dto.WritingScores;
 import com.jpd.web.dto.WritingTextEvaluateForm;
+import com.jpd.web.dto.MagicDiaryEvaluateForm;
+import com.jpd.web.dto.MagicDiaryScores;
+import com.jpd.web.dto.MagicDiaryQuestionForm;
+import com.jpd.web.dto.MagicDiaryQuestionResponse;
 import com.jpd.web.model.Language;
 import com.jpd.web.model.SemanticResult;
 import com.jpd.web.service.AIService;
@@ -55,5 +60,30 @@ public ResponseEntity<?> evaluateWritingText(@RequestBody WritingTextEvaluateFor
 	WritingScores score=this.aiService.evaluateWritingSimple(form.getWritingText(), form.getLanguage(),customerId);
 	
 	return ResponseEntity.ok(score);
+}
+
+@PostMapping("/magic-diary")
+public ResponseEntity<MagicDiaryScores> evaluateMagicDiary(
+        @Valid @RequestBody MagicDiaryEvaluateForm form,
+        @AuthenticationPrincipal Jwt jwt) {
+    String customerId = jwt.getClaimAsString("sub");
+    return ResponseEntity.ok(aiService.evaluateMagicDiary(
+            form.getWritingText(),
+            form.getLanguage(),
+            form.getLessonTitle(),
+            form.getReferenceNotes(),
+            customerId));
+}
+
+@PostMapping("/magic-diary/question")
+public ResponseEntity<MagicDiaryQuestionResponse> askMagicDiaryQuestion(
+        @Valid @RequestBody MagicDiaryQuestionForm form,
+        @AuthenticationPrincipal Jwt jwt) {
+    String customerId = jwt.getClaimAsString("sub");
+    return ResponseEntity.ok(aiService.answerMagicDiaryQuestion(
+            form.getQuestion(),
+            form.getLessonTitle(),
+            form.getReferenceNotes(),
+            customerId));
 }
 }

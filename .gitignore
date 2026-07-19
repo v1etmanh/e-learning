@@ -32,6 +32,21 @@ build/
 # Firebase secret key
 src/main/resources/firebase-service-account.json
 src/main/resources/application.properties
+**/application-local.properties
+**/application-*.properties
+
+# Environment variables and local credentials
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+**/*credentials*.json
+**/*secret*.json
+**/*service-account*.json
+**/secrets/
+**/secret/
+*.pem
+*.key
 .cursor/
 docker-compose/secret/firebase-sa.json
 secret/firebase-service-account.json
