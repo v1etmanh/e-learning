@@ -126,7 +126,12 @@
 
         <!-- Allure for JUnit 5 -->
 
-
+        <!-- AWS SDK S3 for Cloudflare R2 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.31.57</version>
+        </dependency>
 
     </dependencies>
 
