@@ -1,6 +1,14 @@
 package com.jpd.web.controller.common;
 //1. AuthController.java - PKCE VERSION
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +28,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = """
+        Keycloak OAuth2 Authorization Code flow with PKCE, brokered by the backend.
+
+        The browser never handles tokens directly: after the code exchange the backend writes the
+        access and refresh tokens into `HttpOnly` cookies (`access_token`, `refresh_token`, `SameSite=Lax`,
+        path `/`). Every endpoint here is public — no bearer token is required to call them.
+        """)
 public class AuthController {
 
  @Value("${keycloak.auth-uri}")
@@ -40,8 +55,38 @@ public class AuthController {
  private final RestTemplate restTemplate = new RestTemplate();
  private final Map<String, String> codeVerifierStore = new HashMap<>();
 
+ @Operation(
+     summary = "Start login: build the Keycloak authorization URL",
+     description = """
+         First step of the PKCE flow. Generates a random `code_verifier`, derives its SHA-256
+         `code_challenge`, generates an opaque `state`, and returns the Keycloak authorization URL the
+         browser should be sent to (`response_type=code`, `code_challenge_method=S256`,
+         `scope=openid profile email`).
+
+         The `code_verifier` is kept server-side keyed by `state` and consumed by `POST /api/auth/callback`.
+         The caller must pass the returned `state` back unchanged.
+
+         Public endpoint — no token required.
+         """)
+ @ApiResponses({
+     @ApiResponse(responseCode = "200", description = "Authorization URL and the `state` to echo back on callback.",
+         content = @Content(mediaType = "application/json",
+             examples = @ExampleObject(name = "loginUrl", value = """
+                 {
+                   "loginUrl": "https://keycloak.example.com/realms/jaen/protocol/openid-connect/auth?client_id=backended-service&response_type=code&redirect_uri=http://localhost:3000/callback&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&state=Zm9vYmFyYmF6cXV4MTIzNA&scope=openid profile email",
+                   "state": "Zm9vYmFyYmF6cXV4MTIzNA"
+                 }"""))),
+     @ApiResponse(responseCode = "500", description = "The PKCE challenge could not be generated.",
+         content = @Content(mediaType = "application/json",
+             examples = @ExampleObject(name = "failure", value = """
+                 { "error": "Failed to generate login URL" }""")))
+ })
  @GetMapping("/login-url")
- public ResponseEntity<?> getLoginUrl(@RequestParam String redirectUri) {
+ public ResponseEntity<?> getLoginUrl(
+         @Parameter(description = "Where Keycloak should send the browser after login. Must exactly match a redirect URI "
+                 + "registered on the Keycloak client, and must be sent again on `POST /api/auth/callback`.",
+                 required = true, example = "http://localhost:3000/callback")
+         @RequestParam String redirectUri) {
      try {
 
          String codeVerifier = generateCodeVerifier();
@@ -71,6 +116,45 @@ public class AuthController {
      }
  }
 
+ @Operation(
+     summary = "Complete login: exchange the authorization code for tokens",
+     description = """
+         Second step of the PKCE flow. Send the `code` and `state` Keycloak returned to the redirect URI,
+         plus the same `redirectUri` used in `GET /api/auth/login-url`.
+
+         The backend looks up the stored `code_verifier` by `state` (consuming it — a `state` works only
+         once), exchanges the code at Keycloak's token endpoint, and writes `access_token` and
+         `refresh_token` into `HttpOnly` cookies. The tokens themselves are never in the response body.
+
+         Public endpoint — no token required.
+         """)
+ @io.swagger.v3.oas.annotations.parameters.RequestBody(
+     required = true,
+     description = "Values returned by Keycloak on the redirect, plus the redirect URI used to start the flow.",
+     content = @Content(mediaType = "application/json",
+         examples = @ExampleObject(name = "callback", value = """
+             {
+               "code": "8f1e2a3b-4c5d-6e7f-8a9b-0c1d2e3f4a5b.1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d.backended-service",
+               "state": "Zm9vYmFyYmF6cXV4MTIzNA",
+               "redirectUri": "http://localhost:3000/callback"
+             }""")))
+ @ApiResponses({
+     @ApiResponse(responseCode = "200", description = "Tokens obtained and written to `HttpOnly` cookies. Two `Set-Cookie` headers are returned.",
+         content = @Content(mediaType = "application/json",
+             examples = @ExampleObject(name = "success", value = """
+                 { "success": true, "expiresIn": 300 }"""))),
+     @ApiResponse(responseCode = "400", description = "`code` or `state` missing from the body, or `state` unknown/already consumed.",
+         content = @Content(mediaType = "application/json",
+             examples = {
+                 @ExampleObject(name = "missing", value = """
+                     { "error": "Missing code or state" }"""),
+                 @ExampleObject(name = "badState", value = """
+                     { "error": "Invalid state" }""")})),
+     @ApiResponse(responseCode = "401", description = "Keycloak rejected the code exchange (expired or already-used code, redirect URI mismatch, PKCE verifier mismatch).",
+         content = @Content(mediaType = "application/json",
+             examples = @ExampleObject(name = "exchangeFailed", value = """
+                 { "error": "Token exchange failed: 400 Bad Request from Keycloak (invalid_grant)" }""")))
+ })
  @PostMapping("/callback")
  public ResponseEntity<?> handleCallback(@RequestBody Map<String, String> callbackData,
                                          HttpServletResponse response) {
@@ -121,8 +205,36 @@ public class AuthController {
      }
  }
 
+ @Operation(
+     summary = "Refresh the access token",
+     description = """
+         Exchanges the `refresh_token` cookie for a fresh token pair at Keycloak and rewrites both
+         `HttpOnly` cookies. Nothing is read from the request body — the refresh token is taken from the
+         cookie only.
+
+         If Keycloak rejects the refresh token, both cookies are cleared before the 401 is returned, so
+         the client ends up in a clean signed-out state.
+
+         Public endpoint — no bearer token required, but the `refresh_token` cookie must be present.
+         """)
+ @ApiResponses({
+     @ApiResponse(responseCode = "200", description = "New tokens issued and cookies rewritten.",
+         content = @Content(mediaType = "application/json",
+             examples = @ExampleObject(name = "refreshed", value = """
+                 { "success": true }"""))),
+     @ApiResponse(responseCode = "401", description = "No `refresh_token` cookie, or Keycloak rejected it (expired, revoked, or session ended). Cookies are cleared in the latter case.",
+         content = @Content(mediaType = "application/json",
+             examples = {
+                 @ExampleObject(name = "noCookie", value = """
+                     { "error": "No refresh token" }"""),
+                 @ExampleObject(name = "rejected", value = """
+                     { "error": "Invalid refresh token" }""")}))
+ })
  @PostMapping("/refresh")
- public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken,
+ public ResponseEntity<?> refreshToken(
+                                       @Parameter(in = ParameterIn.COOKIE, name = "refresh_token",
+                                               description = "HttpOnly refresh-token cookie set by `/api/auth/callback`. Sent automatically by the browser.")
+                                       @CookieValue(name = "refresh_token", required = false) String refreshToken,
                                        HttpServletResponse response) {
      if (refreshToken == null) {
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -157,8 +269,26 @@ public class AuthController {
      }
  }
 
+ @Operation(
+     summary = "Log out",
+     description = """
+         Ends the Keycloak session for the `refresh_token` cookie and clears both auth cookies by
+         setting them to an empty value with `Max-Age=0`.
+
+         Always succeeds. If the cookie is absent, or the call to Keycloak's logout endpoint fails, the
+         cookies are still cleared and 200 is returned — the client is signed out locally either way.
+
+         Public endpoint — no bearer token required.
+         """)
+ @ApiResponse(responseCode = "200", description = "Cookies cleared. Two expiring `Set-Cookie` headers are returned.",
+     content = @Content(mediaType = "application/json",
+         examples = @ExampleObject(name = "loggedOut", value = """
+             { "success": true }""")))
  @PostMapping("/logout")
- public ResponseEntity<?> logout(@CookieValue(name = "refresh_token", required = false) String refreshToken,
+ public ResponseEntity<?> logout(
+                                 @Parameter(in = ParameterIn.COOKIE, name = "refresh_token",
+                                         description = "HttpOnly refresh-token cookie. Optional — logout succeeds without it.")
+                                 @CookieValue(name = "refresh_token", required = false) String refreshToken,
                                  HttpServletResponse response) {
      if (refreshToken != null) {
          try {
