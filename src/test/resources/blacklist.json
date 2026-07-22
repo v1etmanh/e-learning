@@ -1,0 +1,16 @@
+{
+  "blacklist": [
+    {
+      "word": "badword",
+      "weight": 1.0,
+      "category": "test",
+      "variants": ["bw1"]
+    },
+    {
+      "word": "worseword",
+      "weight": 1.5,
+      "category": "test",
+      "variants": ["ww1"]
+    }
+  ]
+}
