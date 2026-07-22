@@ -1,5 +1,6 @@
 package com.jpd.web.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,7 +18,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "AdminCourseDetailDto", description = "Full course detail for moderation: everything in `CourseDescriptionDto` plus the reports filed against the course.")
 public class AdminCourseDetailDto extends CourseDescriptionDto {
+@Schema(description = "Reports learners have filed against this course.")
 private List<Report>reports;
 public AdminCourseDetailDto(CourseDescriptionDto course, List<Report> rs) {
     super();
