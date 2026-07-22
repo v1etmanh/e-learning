@@ -16,14 +16,45 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
  // Cho phép CORS từ tất cả các nguồn
 @RequestMapping("/api/tts")
+@Tag(name = "Text to speech", description = "Pronunciation audio, proxied from Google Translate's TTS endpoint. Public — no authentication required.")
 public class TtsController {
 
+    @Operation(
+        summary = "Stream spoken audio for a piece of text",
+        description = """
+            Proxies Google Translate's TTS endpoint and streams the resulting MP3 straight back to the
+            caller. The response is `audio/mpeg` with `Cache-Control: public, max-age=86400`, so it can be
+            used directly as an `<audio>` source.
+
+            Public endpoint — no bearer token required.
+
+            Because the audio is streamed, the 200 status and headers are committed before the upstream
+            request is read. If Google fails or rejects the request mid-stream, the error is swallowed and
+            the caller receives a 200 with a truncated or empty body — check that you actually got audio
+            bytes rather than trusting the status code alone.
+            """)
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "MP3 audio stream. May be empty or truncated if the upstream request failed after the response was committed.",
+            content = @Content(mediaType = "audio/mpeg", schema = @Schema(type = "string", format = "binary"))),
+        @ApiResponse(responseCode = "500", description = "The upstream URL could not be built or opened. Empty body.", content = @Content)
+    })
     @GetMapping()
     public ResponseEntity<StreamingResponseBody> textToSpeech(
+            @Parameter(description = "Text to speak. Long inputs may be truncated by the upstream service.",
+                    required = true, example = "今日はいい天気ですね")
             @RequestParam String text,
+            @Parameter(description = "BCP-47 language tag passed to the upstream service as `tl`.", example = "ja-JP")
             @RequestParam(defaultValue = "ja-JP") String lang) {
 
         try { 
